@@ -15,11 +15,15 @@ Detailed reports:
 - `reports/verilogeval_v2_qwen36_27b_baseline.md`
 - `reports/verilogeval_v2_qwen36_35b_a3b_baseline.md`
 - `reports/qwen36_27b_vs_qwen36_35b_a3b_verilogeval.md`
+- `reports/qwen36_27b_vs_qwen36_35b_a3b_public_benchmarks.md`
 - `reports/rtllm2_qwen36_27b_baseline.md`
+- `reports/rtllm2_qwen36_35b_a3b_baseline.md`
 - `reports/protocollm_qwen36_27b_public_lint_baseline.md`
+- `reports/protocollm_qwen36_35b_a3b_public_lint_baseline.md`
 - `reports/rtlopt_qwen36_27b_public_lint_baseline.md`
 - `reports/rtlopt_qwen36_27b_yosys_generic_baseline.md`
 - `reports/rtlopt_qwen36_27b_yosys_equiv_baseline.md`
+- `reports/rtlopt_qwen36_35b_a3b_yosys_equiv_baseline.md`
 
 ## Headline Results
 
@@ -30,10 +34,13 @@ Detailed reports:
 | VerilogEval v2 (`qwen36-35b-a3b`) | Icarus functional simulation | 156 | 156 | 0.7564 | 0.5705 | - | `outputs/verilogeval/qwen36-35b-a3b/20260612T125618Z` |
 | VerilogEval v2 (`qwen36-35b-a3b`) | Icarus functional simulation | 156 | 780 | 0.7449 | 0.5615 | 0.7308 | `outputs/verilogeval/qwen36-35b-a3b/20260612T132806Z` |
 | RTLLM 2.0 | Icarus functional simulation | 50 | 50 | 0.7000 | 0.6000 | - | `outputs/rtllm2_pass1/20260611T133005Z__rtllm2__qwen36-27b` |
+| RTLLM 2.0 (`qwen36-35b-a3b`) | Icarus functional simulation | 50 | 50 | 0.7800 | 0.6000 | - | `outputs/rtllm2/qwen36-35b-a3b/20260612T141752Z` |
 | ProtocolLLM public | Verilator lint only | 9 | 9 | 0.7778 | lint-only | - | `outputs/protocollm_lint_pass1/20260611T162344Z__protocollm__qwen36-27b` |
+| ProtocolLLM public (`qwen36-35b-a3b`) | Verilator lint only | 9 | 9 | 0.2222 | lint-only | - | `outputs/protocollm/qwen36-35b-a3b/20260612T142333Z` |
 | RTL-OPT | Verilator lint only | 40 | 40 | 0.9250 | lint-only | - | `outputs/rtlopt_lint_pass1/20260612T045332Z__rtlopt__qwen36-27b` |
 | RTL-OPT | Yosys generic synthesis | 40 | 40 | 0.9000 | synth-only | - | `outputs/rtlopt_yosys_pass1/20260612T052731Z__rtlopt__qwen36-27b` |
 | RTL-OPT | Yosys equivalence + generic cells | 40 | 40 | 0.9000 | 0.6250 | - | `outputs/rtlopt_equiv_pass1/20260612T060533Z__rtlopt__qwen36-27b` |
+| RTL-OPT (`qwen36-35b-a3b`) | Yosys equivalence + generic cells | 40 | 40 | 0.8750 | 0.4750 | - | `outputs/rtlopt/qwen36-35b-a3b/20260612T143022Z` |
 
 ## Benchmark Confidence
 
@@ -133,6 +140,8 @@ The first matched multi-model VerilogEval comparison shows `qwen36-27b` ahead of
 - pass@5 task recovery: `0.7756` vs `0.7308`
 - The 35B-A3B model had more extraction and compile failures under the same settings.
 
+Across the broader public comparison, `qwen36-35b-a3b` ties RTLLM functional pass@1 at `0.6000` and improves RTLLM syntax pass rate, but trails on VerilogEval, ProtocolLLM public lint, and RTL-OPT equivalence.
+
 The recurring weak spots are:
 
 - invalid procedural constructs at module scope
@@ -151,7 +160,7 @@ The recurring weak spots are:
 
 ## Recommended Next Experiments
 
-1. Run RTLLM 2.0 pass@1 for `qwen36-35b-a3b` to see whether the VerilogEval gap generalizes.
+1. Run `qwen3-coder-30b-a3b` through the same public benchmark sequence.
 2. Run RTLLM 2.0 pass@5 for both models if sampling recovery matters for the target workflow.
 3. Try an RTL-OPT prompt variant focused on preserving exact behavior and minimizing generic cells, reported as a separate prompted condition.
 4. Investigate a more robust open-source PPA flow for RTL-OPT area, either by fixing the Yosys/ABC Liberty mapping stall or using an alternative synthesis stack.
