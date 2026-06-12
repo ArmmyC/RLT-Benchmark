@@ -10,6 +10,17 @@ Comparison rule:
 - ProtocolLLM public lint is reported separately as lint-only.
 - RTL-OPT equivalence is reported separately as behavior-preserving optimization evidence.
 
+## Explicit Comparison Checklist
+
+| Check | Status |
+|---|---|
+| qwen36-27b result | Included in every result table under the `qwen36-27b` column. |
+| qwen36-35b-a3b result | Included in every result table under the `qwen36-35b-a3b` column. |
+| Same benchmark? | Yes. Each row below compares only the same benchmark and evaluation mode. |
+| Same samples_per_task? | Yes. Listed per benchmark/mode in the matched settings audit. |
+| Same temperature? | Yes. Listed per benchmark/mode in the matched settings audit. |
+| Same max_tokens? | Yes. Listed per benchmark/mode in the matched settings audit. |
+
 ## Matched Settings Audit
 
 | Benchmark / Mode | Same benchmark? | samples_per_task | Temperature | Top-p | Max tokens | Notes |
@@ -26,7 +37,7 @@ The comparison below reports the two model results side by side only within the 
 
 ## Output Artifact Tracking
 
-Raw output folders are preserved on Lanta and are not committed to Git because `outputs/` is intentionally gitignored by repo policy. The committed artifacts are the benchmark configs, summary reports, and this comparison report. The exact output directories are listed in the tables below and in `reports/qwen36_35b_a3b_output_manifest.md`.
+Raw output folders are preserved on Lanta and are not committed to Git because `outputs/` is intentionally gitignored by repo policy. The committed output artifact is the manifest, `reports/qwen36_35b_a3b_output_manifest.md`, which lists every authoritative Lanta output folder. The committed artifacts are the benchmark configs, summary reports, output manifest, and this comparison report. The exact output directories are listed in the tables below and in the manifest.
 
 ## Functional RTL Generation
 
