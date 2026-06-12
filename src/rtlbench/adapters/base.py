@@ -9,6 +9,8 @@ from rtlbench.types import BenchmarkTask
 
 class BenchmarkAdapter(ABC):
     name: str
+    extract_all_modules = False
+    evaluator_name = "icarus"
 
     def __init__(self, root: Path, split: str | None = None):
         self.root = root
@@ -21,4 +23,3 @@ class BenchmarkAdapter(ABC):
     @abstractmethod
     def build_prompt(self, task: BenchmarkTask) -> str:
         raise NotImplementedError
-

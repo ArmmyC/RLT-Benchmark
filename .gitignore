@@ -7,3 +7,5 @@ __pycache__/
 *.py[cod]
 outputs/
 benchmarks/
+logs/*.out
+logs/*.err

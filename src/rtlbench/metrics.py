@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 from collections import Counter, defaultdict
+from statistics import mean, median
 from typing import Any, Iterable
 
 
@@ -39,9 +40,33 @@ def aggregate_results(rows: Iterable[dict[str, Any]]) -> dict[str, Any]:
         "functional_pass_rate": _rate(samples, "final_pass"),
         "pass_at_k": pass_k,
         "failure_categories": dict(Counter(str(row["failure_category"]) for row in samples)),
+        "evaluation_metrics": _aggregate_evaluation_metrics(samples),
     }
 
 
 def _rate(rows: list[dict[str, Any]], field: str) -> float:
     return sum(bool(row[field]) for row in rows) / len(rows) if rows else 0.0
 
+
+def _aggregate_evaluation_metrics(rows: list[dict[str, Any]]) -> dict[str, dict[str, float | int]]:
+    values: dict[str, list[float]] = defaultdict(list)
+    for row in rows:
+        metrics = row.get("evaluation_metrics") or {}
+        if not isinstance(metrics, dict):
+            continue
+        for key, value in metrics.items():
+            if isinstance(value, bool):
+                continue
+            if isinstance(value, (int, float)):
+                values[key].append(float(value))
+    return {
+        key: {
+            "count": len(items),
+            "mean": mean(items),
+            "median": median(items),
+            "min": min(items),
+            "max": max(items),
+        }
+        for key, items in sorted(values.items())
+        if items
+    }

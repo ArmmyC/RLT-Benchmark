@@ -20,4 +20,6 @@ def write_reports(output_dir: Path, rows: list[dict[str, Any]], summary: dict[st
             writer.writerow([key, value])
         for key, value in summary["failure_categories"].items():
             writer.writerow([f"failure:{key}", value])
-
+        for metric, stats in summary.get("evaluation_metrics", {}).items():
+            for stat_name, value in stats.items():
+                writer.writerow([f"evaluation:{metric}:{stat_name}", value])

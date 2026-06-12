@@ -25,6 +25,7 @@ def test_mock_model_runs_through_iverilog(tmp_path: Path, monkeypatch: pytest.Mo
         benchmark_name="verilogeval",
         benchmark_root=dataset,
         split=None,
+        model_preset=None,
         model="mock-model",
         base_url="http://unused/v1",
         api_key="EMPTY",
@@ -50,5 +51,10 @@ def test_mock_model_runs_through_iverilog(tmp_path: Path, monkeypatch: pytest.Mo
     results = (output / "results.jsonl").read_text(encoding="utf-8")
     assert '"final_pass": true' in results
     assert (output / "summary.json").is_file()
-    assert len(list((output / "raw").glob("*.txt"))) == 1
-    assert len(list((output / "rtl").glob("*.sv"))) == 1
+    assert output.parent.name == "mock-model"
+    assert output.parent.parent.name == "verilogeval"
+    assert (output / "config_snapshot.yaml").is_file()
+    assert (output / "report.md").is_file()
+    assert len(list((output / "raw_responses").glob("*.txt"))) == 1
+    assert len(list((output / "extracted_rtl").glob("*.sv"))) == 1
+    assert len(list((output / "error_logs").glob("*.log"))) == 1

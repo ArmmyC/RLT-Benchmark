@@ -13,7 +13,7 @@ else
 fi
 
 if [ ! -x "$ENV_PREFIX/bin/python" ]; then
-  "$SOLVER" create -y -p "$ENV_PREFIX" -c conda-forge python=3.11 iverilog pip
+  "$SOLVER" create -y -p "$ENV_PREFIX" -c conda-forge python=3.11 iverilog verilator pip
 fi
 
 if [ ! -x "$ENV_PREFIX/bin/python" ]; then

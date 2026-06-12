@@ -1,0 +1,27 @@
+benchmark:
+  name: rtlopt
+  root: benchmarks/rtl-opt
+
+model:
+  name: qwen36-27b
+  base_url: http://lanta-g-069:8000/v1
+  api_key: EMPTY
+  request_timeout: 300
+  retries: 2
+  extra_body:
+    chat_template_kwargs:
+      enable_thinking: false
+
+generation:
+  temperature: 0.2
+  top_p: 0.95
+  max_tokens: 4096
+
+evaluation:
+  executable: .conda-env/bin/verilator
+  evaluation_timeout: 60
+
+run:
+  samples_per_task: 1
+  workers: 1
+  output_dir: outputs/rtlopt_lint_pass1

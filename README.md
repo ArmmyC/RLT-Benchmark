@@ -19,13 +19,20 @@ outputs/                  Timestamped run artifacts (gitignored)
 Every run writes:
 
 ```text
-outputs/<timestamp>__<benchmark>__<model>/
+outputs/<benchmark>/<model>/<timestamp>/
+  config_snapshot.yaml
+  run_metadata.json
+  report.md
   results.jsonl
   summary.json
   summary.csv
-  raw/                     Original model responses
-  rtl/                     Extracted RTL
-  logs/                    Compile/simulation logs and work directories
+  raw_responses/            Original model responses
+  extracted_rtl/            Extracted RTL
+  logs/
+    run_report.md           Human-readable run log: config, notes, findings
+    */                      Per-sample evaluator work directories
+  error_logs/
+    *.log                   Compile/simulation/synthesis/equivalence logs
 ```
 
 ## Lanta Setup
@@ -64,13 +71,23 @@ export BENCHMARK_ROOT=$PWD/benchmarks/verilogeval
 
 The legacy `QWEN_BASE_URL`, `QWEN_API_KEY`, and `QWEN_MODEL` variables are also accepted. Do not commit API keys to YAML.
 
+Model presets live in `configs/models.yaml`. Use `--model-preset` to swap served model names without changing benchmark settings:
+
+```bash
+.conda-env/bin/rtlbench --config configs/verilogeval.yaml \
+  --model-preset qwen36-35b-a3b \
+  --base-url http://<vllm-node>:8000/v1 \
+  --limit 3 --samples-per-task 1
+```
+
 ## Run
 
 Three-task smoke test:
 
 ```bash
 .conda-env/bin/rtlbench --config configs/verilogeval.yaml \
-  --limit 3 --samples-per-task 1 --temperature 0.2
+  --limit 3 --samples-per-task 1 --temperature 0.2 \
+  --notes "Smoke test after changing prompt or evaluator behavior."
 ```
 
 Larger pass@5 run:
@@ -89,6 +106,12 @@ sbatch --export=ALL,OPENAI_MODEL=qwen36-27b scripts/run_lanta.sbatch \
 ```
 
 The benchmark job itself is CPU-only; the four A100 GPUs remain assigned to the vLLM serving job. This keeps generation reusable across benchmark suites and avoids loading a second model copy.
+
+## Experiment Logs
+
+Each run automatically writes `run_metadata.json` and `logs/run_report.md` inside its output directory. Use `--notes` to record the run intent or hypothesis.
+
+Human-curated experiment notes live under `logs/`, for example `logs/2026-06-11-verilogeval-v2-qwen36.md`.
 
 ## Adding A Benchmark
 

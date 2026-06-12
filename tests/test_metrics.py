@@ -21,3 +21,26 @@ def test_aggregation() -> None:
     assert summary["pass_at_k"]["pass@1"] == 0.5
     assert summary["pass_at_k"]["pass@2"] == 1.0
 
+
+def test_aggregation_summarizes_evaluation_metrics() -> None:
+    rows = [
+        {
+            "task_id": "a",
+            "compile_pass": True,
+            "final_pass": True,
+            "failure_category": "passed",
+            "evaluation_metrics": {"generated_cells": 10},
+        },
+        {
+            "task_id": "b",
+            "compile_pass": True,
+            "final_pass": True,
+            "failure_category": "passed",
+            "evaluation_metrics": {"generated_cells": 20},
+        },
+    ]
+
+    summary = aggregate_results(rows)
+
+    assert summary["evaluation_metrics"]["generated_cells"]["count"] == 2
+    assert summary["evaluation_metrics"]["generated_cells"]["mean"] == 15

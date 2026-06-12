@@ -12,6 +12,7 @@ class BenchmarkTask:
     testbench: str
     module_name: str | None = None
     support_files: dict[str, str] = field(default_factory=dict)
+    compile_support_files: list[str] = field(default_factory=list)
     metadata: dict[str, Any] = field(default_factory=dict)
 
 
@@ -29,6 +30,7 @@ class EvaluationResult:
     final_pass: bool
     failure_category: str
     log: str
+    metrics: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -51,6 +53,7 @@ class SampleResult:
     latency_seconds: float | None = None
     token_usage: dict[str, Any] | None = None
     generation_extras: dict[str, Any] | None = None
+    evaluation_metrics: dict[str, Any] | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -62,3 +65,4 @@ class RunPaths:
     raw: Path
     rtl: Path
     logs: Path
+    error_logs: Path

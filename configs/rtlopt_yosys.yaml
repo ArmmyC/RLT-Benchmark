@@ -1,0 +1,28 @@
+benchmark:
+  name: rtlopt
+  root: benchmarks/rtl-opt
+
+model:
+  name: qwen36-27b
+  base_url: http://lanta-g-165:8000/v1
+  api_key: EMPTY
+  request_timeout: 300
+  retries: 2
+  extra_body:
+    chat_template_kwargs:
+      enable_thinking: false
+
+generation:
+  temperature: 0.2
+  top_p: 0.95
+  max_tokens: 4096
+
+evaluation:
+  type: yosys_generic
+  executable: .conda-env/bin/yosys
+  evaluation_timeout: 60
+
+run:
+  samples_per_task: 1
+  workers: 1
+  output_dir: outputs/rtlopt_yosys_pass1

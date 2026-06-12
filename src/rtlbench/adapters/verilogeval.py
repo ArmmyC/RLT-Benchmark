@@ -59,6 +59,7 @@ class VerilogEvalAdapter(BenchmarkAdapter):
                 testbench=test_path.read_text(encoding="utf-8"),
                 module_name=_module_name(prompt),
                 support_files={ref_path.name: ref_path.read_text(encoding="utf-8")},
+                compile_support_files=[ref_path.name],
                 metadata={"source_format": "verilogeval_v2", "source_dir": str(root)},
             )
 

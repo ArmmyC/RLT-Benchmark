@@ -1,4 +1,4 @@
-from rtlbench.extraction import extract_rtl
+from rtlbench.extraction import extract_all_rtl_modules, extract_rtl
 
 
 def test_extracts_tagged_fence() -> None:
@@ -14,3 +14,17 @@ def test_extracts_unfenced_module() -> None:
 def test_returns_none_without_complete_module() -> None:
     assert extract_rtl("assign y = a;") is None
 
+
+def test_extracts_all_modules_when_required_top_exists() -> None:
+    response = """
+```verilog
+module helper(input a, output y); assign y = a; endmodule
+module top(input a, output y); helper h(a, y); endmodule
+```
+"""
+    assert extract_all_rtl_modules(response, "top").count("endmodule") == 2
+
+
+def test_extract_all_modules_requires_top_when_requested() -> None:
+    response = "module helper; endmodule"
+    assert extract_all_rtl_modules(response, "top") is None
