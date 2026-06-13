@@ -34,3 +34,7 @@ models:
   deepseek-coder-v2-lite:
     name: deepseek-coder-v2-lite
     api_key: EMPTY
+
+  deepseek-coder-v2-lite-instruct:
+    name: deepseek-coder-v2-lite
+    api_key: EMPTY
