@@ -1,0 +1,686 @@
+baseline_v0_1:
+  name: Baseline v0.1 Public RTL Benchmarks
+  description: Five-model public RTL benchmark baseline generated from committed reports and LANTA output manifests.
+  created_utc: "2026-06-15T00:00:00Z"
+  status: frozen
+  models:
+    - qwen36-27b
+    - qwen36-35b-a3b
+    - qwen3-coder-30b-a3b-instruct
+    - qwen25-coder-32b
+    - deepseek-coder-v2-lite-instruct
+  benchmarks:
+    - verilogeval
+    - rtllm2
+    - protocollm
+    - rtlopt
+  runs:
+    - id: verilogeval_pass1_qwen36_27b
+      model: qwen36-27b
+      served_model_name: qwen36-27b
+      benchmark: verilogeval
+      mode: pass1
+      evaluation_kind: functional_simulation
+      samples_per_task: 1
+      temperature: 0.2
+      top_p: 0.95
+      max_tokens: 2048
+      evaluator_type: icarus
+      result_source: manual_summary
+      output_path: outputs/verilogeval_v2_pass1/20260611T090440Z__verilogeval__qwen36-27b
+      summary_path: outputs/verilogeval_v2_pass1/20260611T090440Z__verilogeval__qwen36-27b/summary.json
+      results_path: outputs/verilogeval_v2_pass1/20260611T090440Z__verilogeval__qwen36-27b/results.jsonl
+      report_path: reports/verilogeval_v2_qwen36_27b_baseline.md
+      notes: Manual summary transcribed from the committed baseline report; this run predates the current metadata format.
+      manual_summary: {tasks: 156, samples: 156, syntax_pass_rate: 0.8397, functional_pass_rate: 0.6154, pass_at_k: {pass@1: 0.6154}, failure_categories: {passed: 96, simulation_failure: 35, compile_failure: 17, code_extraction_failure: 8}}
+    - id: verilogeval_pass1_qwen36_35b_a3b
+      model: qwen36-35b-a3b
+      served_model_name: qwen36-35b-a3b
+      benchmark: verilogeval
+      mode: pass1
+      evaluation_kind: functional_simulation
+      samples_per_task: 1
+      temperature: 0.2
+      top_p: 0.95
+      max_tokens: 2048
+      evaluator_type: icarus
+      result_source: manual_summary
+      output_path: outputs/verilogeval/qwen36-35b-a3b/20260612T125618Z
+      summary_path: outputs/verilogeval/qwen36-35b-a3b/20260612T125618Z/summary.json
+      results_path: outputs/verilogeval/qwen36-35b-a3b/20260612T125618Z/results.jsonl
+      manifest_path: reports/qwen36_35b_a3b_output_manifest.md
+      report_path: reports/verilogeval_v2_qwen36_35b_a3b_baseline.md
+      notes: Manual summary transcribed from the committed baseline report and output manifest.
+      manual_summary: {tasks: 156, samples: 156, syntax_pass_rate: 0.7564, functional_pass_rate: 0.5705, pass_at_k: {pass@1: 0.5705}, failure_categories: {passed: 89, simulation_failure: 29, compile_failure: 26, code_extraction_failure: 12}}
+    - id: verilogeval_pass1_qwen3_coder
+      model: qwen3-coder-30b-a3b-instruct
+      served_model_name: qwen3-coder-30b-a3b
+      benchmark: verilogeval
+      mode: pass1
+      evaluation_kind: functional_simulation
+      samples_per_task: 1
+      temperature: 0.2
+      top_p: 0.95
+      max_tokens: 2048
+      evaluator_type: icarus
+      result_source: manual_summary
+      output_path: outputs/verilogeval/qwen3-coder-30b-a3b/20260612T162441Z
+      summary_path: outputs/verilogeval/qwen3-coder-30b-a3b/20260612T162441Z/summary.json
+      results_path: outputs/verilogeval/qwen3-coder-30b-a3b/20260612T162441Z/results.jsonl
+      manifest_path: reports/qwen3_coder_30b_a3b_instruct_output_manifest.md
+      report_path: reports/verilogeval_v2_qwen3_coder_30b_a3b_instruct_baseline.md
+      notes: Manual summary transcribed from the committed baseline report and output manifest.
+      manual_summary: {tasks: 156, samples: 156, syntax_pass_rate: 0.8654, functional_pass_rate: 0.4808, pass_at_k: {pass@1: 0.4808}, failure_categories: {passed: 75, simulation_failure: 60, compile_failure: 20, code_extraction_failure: 1}}
+    - id: verilogeval_pass1_qwen25_coder
+      model: qwen25-coder-32b
+      served_model_name: qwen25-coder-32b
+      benchmark: verilogeval
+      mode: pass1
+      evaluation_kind: functional_simulation
+      samples_per_task: 1
+      temperature: 0.2
+      top_p: 0.95
+      max_tokens: 2048
+      evaluator_type: icarus
+      result_source: manual_summary
+      output_path: outputs/verilogeval/qwen25-coder-32b/20260612T210505Z
+      summary_path: outputs/verilogeval/qwen25-coder-32b/20260612T210505Z/summary.json
+      results_path: outputs/verilogeval/qwen25-coder-32b/20260612T210505Z/results.jsonl
+      manifest_path: reports/qwen25_coder_32b_output_manifest.md
+      report_path: reports/verilogeval_v2_qwen25_coder_32b_baseline.md
+      notes: Manual summary transcribed from the committed baseline report and output manifest.
+      manual_summary: {tasks: 156, samples: 156, syntax_pass_rate: 0.8846, functional_pass_rate: 0.4487, pass_at_k: {pass@1: 0.4487}, failure_categories: {passed: 70, simulation_failure: 68, compile_failure: 18}}
+    - id: verilogeval_pass1_deepseek_coder
+      model: deepseek-coder-v2-lite-instruct
+      served_model_name: deepseek-coder-v2-lite
+      benchmark: verilogeval
+      mode: pass1
+      evaluation_kind: functional_simulation
+      samples_per_task: 1
+      temperature: 0.2
+      top_p: 0.95
+      max_tokens: 2048
+      evaluator_type: icarus
+      result_source: manual_summary
+      output_path: outputs/verilogeval/deepseek-coder-v2-lite/20260613T045026Z
+      summary_path: outputs/verilogeval/deepseek-coder-v2-lite/20260613T045026Z/summary.json
+      results_path: outputs/verilogeval/deepseek-coder-v2-lite/20260613T045026Z/results.jsonl
+      manifest_path: reports/deepseek_coder_v2_lite_instruct_output_manifest.md
+      report_path: reports/verilogeval_v2_deepseek_coder_v2_lite_instruct_baseline.md
+      notes: Manual summary transcribed from the committed baseline report and output manifest.
+      manual_summary: {tasks: 156, samples: 156, syntax_pass_rate: 0.8590, functional_pass_rate: 0.4872, pass_at_k: {pass@1: 0.4872}, failure_categories: {passed: 76, simulation_failure: 58, compile_failure: 21, code_extraction_failure: 1}}
+
+    - id: verilogeval_pass5_qwen36_27b
+      model: qwen36-27b
+      served_model_name: qwen36-27b
+      benchmark: verilogeval
+      mode: pass5
+      evaluation_kind: functional_simulation
+      samples_per_task: 5
+      temperature: 0.6
+      top_p: 0.95
+      max_tokens: 2048
+      evaluator_type: icarus
+      result_source: manual_summary
+      output_path: outputs/verilogeval_v2_pass5/20260611T091009Z__verilogeval__qwen36-27b
+      summary_path: outputs/verilogeval_v2_pass5/20260611T091009Z__verilogeval__qwen36-27b/summary.json
+      results_path: outputs/verilogeval_v2_pass5/20260611T091009Z__verilogeval__qwen36-27b/results.jsonl
+      report_path: reports/verilogeval_v2_qwen36_27b_baseline.md
+      notes: Manual summary transcribed from the committed baseline report; this run predates the current metadata format.
+      manual_summary: {tasks: 156, samples: 780, syntax_pass_rate: 0.7962, functional_pass_rate: 0.6115, pass_at_k: {pass@1: 0.6115, pass@5: 0.7756}, failure_categories: {passed: 477, simulation_failure: 144, compile_failure: 104, code_extraction_failure: 55}}
+    - id: verilogeval_pass5_qwen36_35b_a3b
+      model: qwen36-35b-a3b
+      served_model_name: qwen36-35b-a3b
+      benchmark: verilogeval
+      mode: pass5
+      evaluation_kind: functional_simulation
+      samples_per_task: 5
+      temperature: 0.6
+      top_p: 0.95
+      max_tokens: 2048
+      evaluator_type: icarus
+      result_source: manual_summary
+      output_path: outputs/verilogeval/qwen36-35b-a3b/20260612T132806Z
+      summary_path: outputs/verilogeval/qwen36-35b-a3b/20260612T132806Z/summary.json
+      results_path: outputs/verilogeval/qwen36-35b-a3b/20260612T132806Z/results.jsonl
+      manifest_path: reports/qwen36_35b_a3b_output_manifest.md
+      report_path: reports/verilogeval_v2_qwen36_35b_a3b_baseline.md
+      notes: Manual summary transcribed from the committed baseline report and output manifest.
+      manual_summary: {tasks: 156, samples: 780, syntax_pass_rate: 0.7449, functional_pass_rate: 0.5615, pass_at_k: {pass@1: 0.5615, pass@5: 0.7308}, failure_categories: {passed: 438, simulation_failure: 143, compile_failure: 121, code_extraction_failure: 78}}
+    - id: verilogeval_pass5_qwen3_coder
+      model: qwen3-coder-30b-a3b-instruct
+      served_model_name: qwen3-coder-30b-a3b
+      benchmark: verilogeval
+      mode: pass5
+      evaluation_kind: functional_simulation
+      samples_per_task: 5
+      temperature: 0.6
+      top_p: 0.95
+      max_tokens: 2048
+      evaluator_type: icarus
+      result_source: manual_summary
+      output_path: outputs/verilogeval/qwen3-coder-30b-a3b/20260612T162949Z
+      summary_path: outputs/verilogeval/qwen3-coder-30b-a3b/20260612T162949Z/summary.json
+      results_path: outputs/verilogeval/qwen3-coder-30b-a3b/20260612T162949Z/results.jsonl
+      manifest_path: reports/qwen3_coder_30b_a3b_instruct_output_manifest.md
+      report_path: reports/verilogeval_v2_qwen3_coder_30b_a3b_instruct_baseline.md
+      notes: Manual summary transcribed from the committed baseline report and output manifest.
+      manual_summary: {tasks: 156, samples: 780, syntax_pass_rate: 0.8628, functional_pass_rate: 0.4846, pass_at_k: {pass@1: 0.4846, pass@5: 0.5705}, failure_categories: {passed: 378, simulation_failure: 295, compile_failure: 101, code_extraction_failure: 6}}
+    - id: verilogeval_pass5_qwen25_coder
+      model: qwen25-coder-32b
+      served_model_name: qwen25-coder-32b
+      benchmark: verilogeval
+      mode: pass5
+      evaluation_kind: functional_simulation
+      samples_per_task: 5
+      temperature: 0.6
+      top_p: 0.95
+      max_tokens: 2048
+      evaluator_type: icarus
+      result_source: manual_summary
+      output_path: outputs/verilogeval/qwen25-coder-32b/20260612T230606Z
+      summary_path: outputs/verilogeval/qwen25-coder-32b/20260612T230606Z/summary.json
+      results_path: outputs/verilogeval/qwen25-coder-32b/20260612T230606Z/results.jsonl
+      manifest_path: reports/qwen25_coder_32b_output_manifest.md
+      report_path: reports/verilogeval_v2_qwen25_coder_32b_baseline.md
+      notes: Manual summary transcribed from the committed baseline report and output manifest.
+      manual_summary: {tasks: 156, samples: 780, syntax_pass_rate: 0.8654, functional_pass_rate: 0.4577, pass_at_k: {pass@1: 0.4577, pass@5: 0.5385}, failure_categories: {passed: 357, simulation_failure: 318, compile_failure: 104, code_extraction_failure: 1}}
+    - id: verilogeval_pass5_deepseek_coder
+      model: deepseek-coder-v2-lite-instruct
+      served_model_name: deepseek-coder-v2-lite
+      benchmark: verilogeval
+      mode: pass5
+      evaluation_kind: functional_simulation
+      samples_per_task: 5
+      temperature: 0.6
+      top_p: 0.95
+      max_tokens: 2048
+      evaluator_type: icarus
+      result_source: manual_summary
+      output_path: outputs/verilogeval/deepseek-coder-v2-lite/20260613T093759Z
+      summary_path: outputs/verilogeval/deepseek-coder-v2-lite/20260613T093759Z/summary.json
+      results_path: outputs/verilogeval/deepseek-coder-v2-lite/20260613T093759Z/results.jsonl
+      manifest_path: reports/deepseek_coder_v2_lite_instruct_output_manifest.md
+      report_path: reports/verilogeval_v2_deepseek_coder_v2_lite_instruct_baseline.md
+      notes: Manual summary transcribed from the valid retry in the committed report; the incomplete earlier attempt is excluded.
+      manual_summary: {tasks: 156, samples: 780, syntax_pass_rate: 0.8551, functional_pass_rate: 0.4821, pass_at_k: {pass@1: 0.4821, pass@5: 0.5641}, failure_categories: {passed: 376, simulation_failure: 291, compile_failure: 111, code_extraction_failure: 2}}
+
+    - id: rtllm2_pass1_qwen36_27b
+      model: qwen36-27b
+      served_model_name: qwen36-27b
+      benchmark: rtllm2
+      mode: pass1
+      evaluation_kind: functional_simulation
+      samples_per_task: 1
+      temperature: 0.2
+      top_p: 0.95
+      max_tokens: 4096
+      evaluator_type: icarus
+      result_source: manual_summary
+      output_path: outputs/rtllm2_pass1/20260611T133005Z__rtllm2__qwen36-27b
+      summary_path: outputs/rtllm2_pass1/20260611T133005Z__rtllm2__qwen36-27b/summary.json
+      results_path: outputs/rtllm2_pass1/20260611T133005Z__rtllm2__qwen36-27b/results.jsonl
+      report_path: reports/rtllm2_qwen36_27b_baseline.md
+      notes: Manual summary transcribed from the committed baseline report.
+      manual_summary: {tasks: 50, samples: 50, syntax_pass_rate: 0.7000, functional_pass_rate: 0.6000, pass_at_k: {pass@1: 0.6000}, failure_categories: {passed: 30, compile_failure: 14, simulation_failure: 4, code_extraction_failure: 1, timeout: 1}}
+    - id: rtllm2_pass1_qwen36_35b_a3b
+      model: qwen36-35b-a3b
+      served_model_name: qwen36-35b-a3b
+      benchmark: rtllm2
+      mode: pass1
+      evaluation_kind: functional_simulation
+      samples_per_task: 1
+      temperature: 0.2
+      top_p: 0.95
+      max_tokens: 4096
+      evaluator_type: icarus
+      result_source: manual_summary
+      output_path: outputs/rtllm2/qwen36-35b-a3b/20260612T141752Z
+      summary_path: outputs/rtllm2/qwen36-35b-a3b/20260612T141752Z/summary.json
+      results_path: outputs/rtllm2/qwen36-35b-a3b/20260612T141752Z/results.jsonl
+      manifest_path: reports/qwen36_35b_a3b_output_manifest.md
+      report_path: reports/rtllm2_qwen36_35b_a3b_baseline.md
+      notes: Manual summary transcribed from the committed baseline report and output manifest.
+      manual_summary: {tasks: 50, samples: 50, syntax_pass_rate: 0.7800, functional_pass_rate: 0.6000, pass_at_k: {pass@1: 0.6000}, failure_categories: {passed: 30, simulation_failure: 8, compile_failure: 10, code_extraction_failure: 1, timeout: 1}}
+    - id: rtllm2_pass1_qwen3_coder
+      model: qwen3-coder-30b-a3b-instruct
+      served_model_name: qwen3-coder-30b-a3b
+      benchmark: rtllm2
+      mode: pass1
+      evaluation_kind: functional_simulation
+      samples_per_task: 1
+      temperature: 0.2
+      top_p: 0.95
+      max_tokens: 4096
+      evaluator_type: icarus
+      result_source: manual_summary
+      output_path: outputs/rtllm2/qwen3-coder-30b-a3b/20260612T183418Z
+      summary_path: outputs/rtllm2/qwen3-coder-30b-a3b/20260612T183418Z/summary.json
+      results_path: outputs/rtllm2/qwen3-coder-30b-a3b/20260612T183418Z/results.jsonl
+      manifest_path: reports/qwen3_coder_30b_a3b_instruct_output_manifest.md
+      report_path: reports/rtllm2_qwen3_coder_30b_a3b_instruct_baseline.md
+      notes: Manual summary transcribed from the committed baseline report and output manifest.
+      manual_summary: {tasks: 50, samples: 50, syntax_pass_rate: 0.6600, functional_pass_rate: 0.5000, pass_at_k: {pass@1: 0.5000}}
+    - id: rtllm2_pass1_qwen25_coder
+      model: qwen25-coder-32b
+      served_model_name: qwen25-coder-32b
+      benchmark: rtllm2
+      mode: pass1
+      evaluation_kind: functional_simulation
+      samples_per_task: 1
+      temperature: 0.2
+      top_p: 0.95
+      max_tokens: 4096
+      evaluator_type: icarus
+      result_source: manual_summary
+      output_path: outputs/rtllm2/qwen25-coder-32b/20260613T010701Z
+      summary_path: outputs/rtllm2/qwen25-coder-32b/20260613T010701Z/summary.json
+      results_path: outputs/rtllm2/qwen25-coder-32b/20260613T010701Z/results.jsonl
+      manifest_path: reports/qwen25_coder_32b_output_manifest.md
+      report_path: reports/rtllm2_qwen25_coder_32b_baseline.md
+      notes: Manual summary transcribed from the committed baseline report and output manifest.
+      manual_summary: {tasks: 50, samples: 50, syntax_pass_rate: 0.7400, functional_pass_rate: 0.5400, pass_at_k: {pass@1: 0.5400}}
+    - id: rtllm2_pass1_deepseek_coder
+      model: deepseek-coder-v2-lite-instruct
+      served_model_name: deepseek-coder-v2-lite
+      benchmark: rtllm2
+      mode: pass1
+      evaluation_kind: functional_simulation
+      samples_per_task: 1
+      temperature: 0.2
+      top_p: 0.95
+      max_tokens: 4096
+      evaluator_type: icarus
+      result_source: manual_summary
+      output_path: outputs/rtllm2/deepseek-coder-v2-lite/20260613T121930Z
+      summary_path: outputs/rtllm2/deepseek-coder-v2-lite/20260613T121930Z/summary.json
+      results_path: outputs/rtllm2/deepseek-coder-v2-lite/20260613T121930Z/results.jsonl
+      manifest_path: reports/deepseek_coder_v2_lite_instruct_output_manifest.md
+      report_path: reports/rtllm2_deepseek_coder_v2_lite_instruct_baseline.md
+      notes: Manual summary transcribed from the committed baseline report and output manifest.
+      manual_summary: {tasks: 50, samples: 50, syntax_pass_rate: 0.7800, functional_pass_rate: 0.5200, pass_at_k: {pass@1: 0.5200}, failure_categories: {passed: 26, simulation_failure: 13, compile_failure: 11}}
+
+    - id: protocollm_lint_qwen36_27b
+      model: qwen36-27b
+      served_model_name: qwen36-27b
+      benchmark: protocollm
+      mode: lint
+      evaluation_kind: lint_only
+      samples_per_task: 1
+      temperature: 0.2
+      top_p: 0.95
+      max_tokens: 4096
+      evaluator_type: verilator_lint
+      result_source: manual_summary
+      output_path: outputs/protocollm_lint_pass1/20260611T162344Z__protocollm__qwen36-27b
+      summary_path: outputs/protocollm_lint_pass1/20260611T162344Z__protocollm__qwen36-27b/summary.json
+      results_path: outputs/protocollm_lint_pass1/20260611T162344Z__protocollm__qwen36-27b/results.jsonl
+      report_path: reports/protocollm_qwen36_27b_public_lint_baseline.md
+      notes: Manual summary transcribed from the committed lint-only report.
+      manual_summary: {tasks: 9, samples: 9, syntax_pass_rate: 0.7778, functional_pass_rate: 0.7778, pass_at_k: {pass@1: 0.7778}, failure_categories: {passed: 7, compile_failure: 2}}
+    - id: protocollm_lint_qwen36_35b_a3b
+      model: qwen36-35b-a3b
+      served_model_name: qwen36-35b-a3b
+      benchmark: protocollm
+      mode: lint
+      evaluation_kind: lint_only
+      samples_per_task: 1
+      temperature: 0.2
+      top_p: 0.95
+      max_tokens: 4096
+      evaluator_type: verilator_lint
+      result_source: manual_summary
+      output_path: outputs/protocollm/qwen36-35b-a3b/20260612T142333Z
+      summary_path: outputs/protocollm/qwen36-35b-a3b/20260612T142333Z/summary.json
+      results_path: outputs/protocollm/qwen36-35b-a3b/20260612T142333Z/results.jsonl
+      manifest_path: reports/qwen36_35b_a3b_output_manifest.md
+      report_path: reports/protocollm_qwen36_35b_a3b_public_lint_baseline.md
+      notes: Manual summary transcribed from the committed lint-only report and output manifest.
+      manual_summary: {tasks: 9, samples: 9, syntax_pass_rate: 0.2222, functional_pass_rate: 0.2222, pass_at_k: {pass@1: 0.2222}, failure_categories: {passed: 2, compile_failure: 4, code_extraction_failure: 3}}
+    - id: protocollm_lint_qwen3_coder
+      model: qwen3-coder-30b-a3b-instruct
+      served_model_name: qwen3-coder-30b-a3b
+      benchmark: protocollm
+      mode: lint
+      evaluation_kind: lint_only
+      samples_per_task: 1
+      temperature: 0.2
+      top_p: 0.95
+      max_tokens: 4096
+      evaluator_type: verilator_lint
+      result_source: manual_summary
+      output_path: outputs/protocollm/qwen3-coder-30b-a3b/20260612T183655Z
+      summary_path: outputs/protocollm/qwen3-coder-30b-a3b/20260612T183655Z/summary.json
+      results_path: outputs/protocollm/qwen3-coder-30b-a3b/20260612T183655Z/results.jsonl
+      manifest_path: reports/qwen3_coder_30b_a3b_instruct_output_manifest.md
+      report_path: reports/protocollm_qwen3_coder_30b_a3b_instruct_public_lint_baseline.md
+      notes: Manual summary transcribed from the committed lint-only report and output manifest.
+      manual_summary: {tasks: 9, samples: 9, syntax_pass_rate: 0.7778, functional_pass_rate: 0.7778, pass_at_k: {pass@1: 0.7778}, failure_categories: {passed: 7, compile_failure: 2}}
+    - id: protocollm_lint_qwen25_coder
+      model: qwen25-coder-32b
+      served_model_name: qwen25-coder-32b
+      benchmark: protocollm
+      mode: lint
+      evaluation_kind: lint_only
+      samples_per_task: 1
+      temperature: 0.2
+      top_p: 0.95
+      max_tokens: 4096
+      evaluator_type: verilator_lint
+      result_source: manual_summary
+      output_path: outputs/protocollm/qwen25-coder-32b/20260613T030734Z
+      summary_path: outputs/protocollm/qwen25-coder-32b/20260613T030734Z/summary.json
+      results_path: outputs/protocollm/qwen25-coder-32b/20260613T030734Z/results.jsonl
+      manifest_path: reports/qwen25_coder_32b_output_manifest.md
+      report_path: reports/protocollm_qwen25_coder_32b_public_lint_baseline.md
+      notes: Manual summary transcribed from the committed lint-only report and output manifest.
+      manual_summary: {tasks: 9, samples: 9, syntax_pass_rate: 0.6667, functional_pass_rate: 0.6667, pass_at_k: {pass@1: 0.6667}, failure_categories: {passed: 6, compile_failure: 3}}
+    - id: protocollm_lint_deepseek_coder
+      model: deepseek-coder-v2-lite-instruct
+      served_model_name: deepseek-coder-v2-lite
+      benchmark: protocollm
+      mode: lint
+      evaluation_kind: lint_only
+      samples_per_task: 1
+      temperature: 0.2
+      top_p: 0.95
+      max_tokens: 4096
+      evaluator_type: verilator_lint
+      result_source: manual_summary
+      output_path: outputs/protocollm/deepseek-coder-v2-lite/20260613T143118Z
+      summary_path: outputs/protocollm/deepseek-coder-v2-lite/20260613T143118Z/summary.json
+      results_path: outputs/protocollm/deepseek-coder-v2-lite/20260613T143118Z/results.jsonl
+      manifest_path: reports/deepseek_coder_v2_lite_instruct_output_manifest.md
+      report_path: reports/protocollm_deepseek_coder_v2_lite_instruct_public_lint_baseline.md
+      notes: Manual summary transcribed from the valid retry; the endpoint-failure attempt is excluded.
+      manual_summary: {tasks: 9, samples: 9, syntax_pass_rate: 0.6667, functional_pass_rate: 0.6667, pass_at_k: {pass@1: 0.6667}, failure_categories: {passed: 6, compile_failure: 3}}
+
+    - id: rtlopt_lint_qwen36_27b
+      model: qwen36-27b
+      served_model_name: qwen36-27b
+      benchmark: rtlopt
+      mode: lint
+      evaluation_kind: lint_only
+      samples_per_task: 1
+      temperature: 0.2
+      top_p: 0.95
+      max_tokens: 4096
+      evaluator_type: verilator_lint
+      result_source: manual_summary
+      output_path: outputs/rtlopt_lint_pass1/20260612T045332Z__rtlopt__qwen36-27b
+      summary_path: outputs/rtlopt_lint_pass1/20260612T045332Z__rtlopt__qwen36-27b/summary.json
+      results_path: outputs/rtlopt_lint_pass1/20260612T045332Z__rtlopt__qwen36-27b/results.jsonl
+      report_path: reports/rtlopt_qwen36_27b_public_lint_baseline.md
+      notes: Manual summary transcribed from the committed lint-only report.
+      manual_summary: {tasks: 40, samples: 40, syntax_pass_rate: 0.9250, functional_pass_rate: 0.9250, pass_at_k: {pass@1: 0.9250}, failure_categories: {passed: 37, compile_failure: 3}}
+    - id: rtlopt_lint_qwen36_35b_a3b
+      model: qwen36-35b-a3b
+      served_model_name: qwen36-35b-a3b
+      benchmark: rtlopt
+      mode: lint
+      evaluation_kind: lint_only
+      samples_per_task: 1
+      temperature: 0.2
+      top_p: 0.95
+      max_tokens: 4096
+      evaluator_type: verilator_lint
+      result_source: manual_summary
+      output_path: outputs/rtlopt/qwen36-35b-a3b/20260612T144142Z
+      summary_path: outputs/rtlopt/qwen36-35b-a3b/20260612T144142Z/summary.json
+      results_path: outputs/rtlopt/qwen36-35b-a3b/20260612T144142Z/results.jsonl
+      manifest_path: reports/qwen36_35b_a3b_output_manifest.md
+      report_path: reports/rtlopt_qwen36_35b_a3b_yosys_equiv_baseline.md
+      notes: Manual summary transcribed from the committed report and output manifest.
+      manual_summary: {tasks: 40, samples: 40, syntax_pass_rate: 0.8500, functional_pass_rate: 0.8500, pass_at_k: {pass@1: 0.8500}, failure_categories: {passed: 34, compile_failure: 5, code_extraction_failure: 1}}
+    - id: rtlopt_lint_qwen3_coder
+      model: qwen3-coder-30b-a3b-instruct
+      served_model_name: qwen3-coder-30b-a3b
+      benchmark: rtlopt
+      mode: lint
+      evaluation_kind: lint_only
+      samples_per_task: 1
+      temperature: 0.2
+      top_p: 0.95
+      max_tokens: 4096
+      evaluator_type: verilator_lint
+      result_source: manual_summary
+      output_path: outputs/rtlopt/qwen3-coder-30b-a3b/20260612T183843Z
+      summary_path: outputs/rtlopt/qwen3-coder-30b-a3b/20260612T183843Z/summary.json
+      results_path: outputs/rtlopt/qwen3-coder-30b-a3b/20260612T183843Z/results.jsonl
+      manifest_path: reports/qwen3_coder_30b_a3b_instruct_output_manifest.md
+      report_path: reports/rtlopt_qwen3_coder_30b_a3b_instruct_yosys_equiv_baseline.md
+      notes: Manual summary transcribed from the committed report and output manifest.
+      manual_summary: {tasks: 40, samples: 40, syntax_pass_rate: 0.8250, functional_pass_rate: 0.8250, pass_at_k: {pass@1: 0.8250}, failure_categories: {passed: 33, compile_failure: 4, code_extraction_failure: 3}}
+    - id: rtlopt_lint_qwen25_coder
+      model: qwen25-coder-32b
+      served_model_name: qwen25-coder-32b
+      benchmark: rtlopt
+      mode: lint
+      evaluation_kind: lint_only
+      samples_per_task: 1
+      temperature: 0.2
+      top_p: 0.95
+      max_tokens: 4096
+      evaluator_type: verilator_lint
+      result_source: manual_summary
+      output_path: outputs/rtlopt/qwen25-coder-32b/20260613T031037Z
+      summary_path: outputs/rtlopt/qwen25-coder-32b/20260613T031037Z/summary.json
+      results_path: outputs/rtlopt/qwen25-coder-32b/20260613T031037Z/results.jsonl
+      manifest_path: reports/qwen25_coder_32b_output_manifest.md
+      report_path: reports/rtlopt_qwen25_coder_32b_yosys_equiv_baseline.md
+      notes: Manual summary transcribed from the committed report and output manifest.
+      manual_summary: {tasks: 40, samples: 40, syntax_pass_rate: 0.9250, functional_pass_rate: 0.9250, pass_at_k: {pass@1: 0.9250}, failure_categories: {passed: 37, compile_failure: 3}}
+    - id: rtlopt_lint_deepseek_coder
+      model: deepseek-coder-v2-lite-instruct
+      served_model_name: deepseek-coder-v2-lite
+      benchmark: rtlopt
+      mode: lint
+      evaluation_kind: lint_only
+      samples_per_task: 1
+      temperature: 0.2
+      top_p: 0.95
+      max_tokens: 4096
+      evaluator_type: verilator_lint
+      result_source: manual_summary
+      output_path: outputs/rtlopt/deepseek-coder-v2-lite/20260613T150136Z
+      summary_path: outputs/rtlopt/deepseek-coder-v2-lite/20260613T150136Z/summary.json
+      results_path: outputs/rtlopt/deepseek-coder-v2-lite/20260613T150136Z/results.jsonl
+      manifest_path: reports/deepseek_coder_v2_lite_instruct_output_manifest.md
+      report_path: reports/rtlopt_deepseek_coder_v2_lite_instruct_yosys_equiv_baseline.md
+      notes: Manual summary transcribed from the committed report and output manifest.
+      manual_summary: {tasks: 40, samples: 40, syntax_pass_rate: 0.9250, functional_pass_rate: 0.9250, pass_at_k: {pass@1: 0.9250}, failure_categories: {passed: 37, compile_failure: 2, code_extraction_failure: 1}}
+
+    - id: rtlopt_synthesis_qwen36_27b
+      model: qwen36-27b
+      served_model_name: qwen36-27b
+      benchmark: rtlopt
+      mode: synthesis
+      evaluation_kind: synthesis_only
+      samples_per_task: 1
+      temperature: 0.2
+      top_p: 0.95
+      max_tokens: 4096
+      evaluator_type: yosys_generic
+      result_source: manual_summary
+      output_path: outputs/rtlopt_yosys_pass1/20260612T052731Z__rtlopt__qwen36-27b
+      summary_path: outputs/rtlopt_yosys_pass1/20260612T052731Z__rtlopt__qwen36-27b/summary.json
+      results_path: outputs/rtlopt_yosys_pass1/20260612T052731Z__rtlopt__qwen36-27b/results.jsonl
+      report_path: reports/rtlopt_qwen36_27b_yosys_generic_baseline.md
+      notes: Manual summary transcribed from the committed synthesis-only report.
+      manual_summary: {tasks: 40, samples: 40, syntax_pass_rate: 0.9000, functional_pass_rate: 0.9000, pass_at_k: {pass@1: 0.9000}, failure_categories: {passed: 36, synthesis_failure: 4}}
+    - id: rtlopt_synthesis_qwen36_35b_a3b
+      model: qwen36-35b-a3b
+      served_model_name: qwen36-35b-a3b
+      benchmark: rtlopt
+      mode: synthesis
+      evaluation_kind: synthesis_only
+      samples_per_task: 1
+      temperature: 0.2
+      top_p: 0.95
+      max_tokens: 4096
+      evaluator_type: yosys_generic
+      result_source: manual_summary
+      output_path: outputs/rtlopt/qwen36-35b-a3b/20260612T144440Z
+      summary_path: outputs/rtlopt/qwen36-35b-a3b/20260612T144440Z/summary.json
+      results_path: outputs/rtlopt/qwen36-35b-a3b/20260612T144440Z/results.jsonl
+      manifest_path: reports/qwen36_35b_a3b_output_manifest.md
+      report_path: reports/rtlopt_qwen36_35b_a3b_yosys_equiv_baseline.md
+      notes: Manual summary transcribed from the committed report and output manifest.
+      manual_summary: {tasks: 40, samples: 40, syntax_pass_rate: 0.8750, functional_pass_rate: 0.8750, pass_at_k: {pass@1: 0.8750}, failure_categories: {passed: 35, synthesis_failure: 3, code_extraction_failure: 2}}
+    - id: rtlopt_synthesis_qwen3_coder
+      model: qwen3-coder-30b-a3b-instruct
+      served_model_name: qwen3-coder-30b-a3b
+      benchmark: rtlopt
+      mode: synthesis
+      evaluation_kind: synthesis_only
+      samples_per_task: 1
+      temperature: 0.2
+      top_p: 0.95
+      max_tokens: 4096
+      evaluator_type: yosys_generic
+      result_source: manual_summary
+      output_path: outputs/rtlopt/qwen3-coder-30b-a3b/20260612T184111Z
+      summary_path: outputs/rtlopt/qwen3-coder-30b-a3b/20260612T184111Z/summary.json
+      results_path: outputs/rtlopt/qwen3-coder-30b-a3b/20260612T184111Z/results.jsonl
+      manifest_path: reports/qwen3_coder_30b_a3b_instruct_output_manifest.md
+      report_path: reports/rtlopt_qwen3_coder_30b_a3b_instruct_yosys_equiv_baseline.md
+      notes: Manual summary transcribed from the committed report and output manifest.
+      manual_summary: {tasks: 40, samples: 40, syntax_pass_rate: 0.9250, functional_pass_rate: 0.9250, pass_at_k: {pass@1: 0.9250}, failure_categories: {passed: 37, synthesis_failure: 2, code_extraction_failure: 1}}
+    - id: rtlopt_synthesis_qwen25_coder
+      model: qwen25-coder-32b
+      served_model_name: qwen25-coder-32b
+      benchmark: rtlopt
+      mode: synthesis
+      evaluation_kind: synthesis_only
+      samples_per_task: 1
+      temperature: 0.2
+      top_p: 0.95
+      max_tokens: 4096
+      evaluator_type: yosys_generic
+      result_source: manual_summary
+      output_path: outputs/rtlopt/qwen25-coder-32b/20260613T031340Z
+      summary_path: outputs/rtlopt/qwen25-coder-32b/20260613T031340Z/summary.json
+      results_path: outputs/rtlopt/qwen25-coder-32b/20260613T031340Z/results.jsonl
+      manifest_path: reports/qwen25_coder_32b_output_manifest.md
+      report_path: reports/rtlopt_qwen25_coder_32b_yosys_equiv_baseline.md
+      notes: Manual summary transcribed from the committed report and output manifest.
+      manual_summary: {tasks: 40, samples: 40, syntax_pass_rate: 0.9000, functional_pass_rate: 0.9000, pass_at_k: {pass@1: 0.9000}, failure_categories: {passed: 36, synthesis_failure: 4}}
+    - id: rtlopt_synthesis_deepseek_coder
+      model: deepseek-coder-v2-lite-instruct
+      served_model_name: deepseek-coder-v2-lite
+      benchmark: rtlopt
+      mode: synthesis
+      evaluation_kind: synthesis_only
+      samples_per_task: 1
+      temperature: 0.2
+      top_p: 0.95
+      max_tokens: 4096
+      evaluator_type: yosys_generic
+      result_source: manual_summary
+      output_path: outputs/rtlopt/deepseek-coder-v2-lite/20260613T170218Z
+      summary_path: outputs/rtlopt/deepseek-coder-v2-lite/20260613T170218Z/summary.json
+      results_path: outputs/rtlopt/deepseek-coder-v2-lite/20260613T170218Z/results.jsonl
+      manifest_path: reports/deepseek_coder_v2_lite_instruct_output_manifest.md
+      report_path: reports/rtlopt_deepseek_coder_v2_lite_instruct_yosys_equiv_baseline.md
+      notes: Manual summary transcribed from the committed report and output manifest.
+      manual_summary: {tasks: 40, samples: 40, syntax_pass_rate: 0.9000, functional_pass_rate: 0.9000, pass_at_k: {pass@1: 0.9000}, failure_categories: {passed: 36, synthesis_failure: 3, code_extraction_failure: 1}}
+
+    - id: rtlopt_equivalence_qwen36_27b
+      model: qwen36-27b
+      served_model_name: qwen36-27b
+      benchmark: rtlopt
+      mode: equivalence
+      evaluation_kind: equivalence
+      samples_per_task: 1
+      temperature: 0.2
+      top_p: 0.95
+      max_tokens: 4096
+      evaluator_type: yosys_equivalence
+      result_source: manual_summary
+      output_path: outputs/rtlopt_equiv_pass1/20260612T060533Z__rtlopt__qwen36-27b
+      summary_path: outputs/rtlopt_equiv_pass1/20260612T060533Z__rtlopt__qwen36-27b/summary.json
+      results_path: outputs/rtlopt_equiv_pass1/20260612T060533Z__rtlopt__qwen36-27b/results.jsonl
+      report_path: reports/rtlopt_qwen36_27b_yosys_equiv_baseline.md
+      notes: Manual summary and optimization metrics transcribed from the committed equivalence report.
+      manual_summary: {tasks: 40, samples: 40, syntax_pass_rate: 0.9000, functional_pass_rate: 0.6250, pass_at_k: {pass@1: 0.6250}, failure_categories: {passed: 25, equiv_failure: 9, synthesis_failure: 4, timeout: 2}}
+      rtlopt_metrics: {equivalence_pass_rate: 0.6250, equiv_passing_tasks: 25, total_tasks: 40, improved_equiv_passing_tasks: 9, average_generic_cell_ratio_among_equiv_passing: 0.9124}
+    - id: rtlopt_equivalence_qwen36_35b_a3b
+      model: qwen36-35b-a3b
+      served_model_name: qwen36-35b-a3b
+      benchmark: rtlopt
+      mode: equivalence
+      evaluation_kind: equivalence
+      samples_per_task: 1
+      temperature: 0.2
+      top_p: 0.95
+      max_tokens: 4096
+      evaluator_type: yosys_equivalence
+      result_source: manual_summary
+      output_path: outputs/rtlopt/qwen36-35b-a3b/20260612T143022Z
+      summary_path: outputs/rtlopt/qwen36-35b-a3b/20260612T143022Z/summary.json
+      results_path: outputs/rtlopt/qwen36-35b-a3b/20260612T143022Z/results.jsonl
+      manifest_path: reports/qwen36_35b_a3b_output_manifest.md
+      report_path: reports/rtlopt_qwen36_35b_a3b_yosys_equiv_baseline.md
+      notes: Manual summary and optimization metrics transcribed from the committed report and output manifest.
+      manual_summary: {tasks: 40, samples: 40, syntax_pass_rate: 0.8750, functional_pass_rate: 0.4750, pass_at_k: {pass@1: 0.4750}, failure_categories: {passed: 19, equiv_failure: 15, synthesis_failure: 5, timeout: 1}}
+      rtlopt_metrics: {equivalence_pass_rate: 0.4750, equiv_passing_tasks: 19, total_tasks: 40, improved_equiv_passing_tasks: 6, average_generic_cell_ratio_among_equiv_passing: 0.9003}
+    - id: rtlopt_equivalence_qwen3_coder
+      model: qwen3-coder-30b-a3b-instruct
+      served_model_name: qwen3-coder-30b-a3b
+      benchmark: rtlopt
+      mode: equivalence
+      evaluation_kind: equivalence
+      samples_per_task: 1
+      temperature: 0.2
+      top_p: 0.95
+      max_tokens: 4096
+      evaluator_type: yosys_equivalence
+      result_source: manual_summary
+      output_path: outputs/rtlopt/qwen3-coder-30b-a3b/20260612T184318Z
+      summary_path: outputs/rtlopt/qwen3-coder-30b-a3b/20260612T184318Z/summary.json
+      results_path: outputs/rtlopt/qwen3-coder-30b-a3b/20260612T184318Z/results.jsonl
+      manifest_path: reports/qwen3_coder_30b_a3b_instruct_output_manifest.md
+      report_path: reports/rtlopt_qwen3_coder_30b_a3b_instruct_yosys_equiv_baseline.md
+      notes: Manual summary and optimization metrics transcribed from the committed report and output manifest.
+      manual_summary: {tasks: 40, samples: 40, syntax_pass_rate: 0.9250, functional_pass_rate: 0.4750, pass_at_k: {pass@1: 0.4750}, failure_categories: {passed: 19, equiv_failure: 16, code_extraction_failure: 2, timeout: 2, synthesis_failure: 1}}
+      rtlopt_metrics: {equivalence_pass_rate: 0.4750, equiv_passing_tasks: 19, total_tasks: 40, improved_equiv_passing_tasks: 4, average_generic_cell_ratio_among_equiv_passing: 0.9472}
+    - id: rtlopt_equivalence_qwen25_coder
+      model: qwen25-coder-32b
+      served_model_name: qwen25-coder-32b
+      benchmark: rtlopt
+      mode: equivalence
+      evaluation_kind: equivalence
+      samples_per_task: 1
+      temperature: 0.2
+      top_p: 0.95
+      max_tokens: 4096
+      evaluator_type: yosys_equivalence
+      result_source: manual_summary
+      output_path: outputs/rtlopt/qwen25-coder-32b/20260613T031649Z
+      summary_path: outputs/rtlopt/qwen25-coder-32b/20260613T031649Z/summary.json
+      results_path: outputs/rtlopt/qwen25-coder-32b/20260613T031649Z/results.jsonl
+      manifest_path: reports/qwen25_coder_32b_output_manifest.md
+      report_path: reports/rtlopt_qwen25_coder_32b_yosys_equiv_baseline.md
+      notes: Manual summary and optimization metrics transcribed from the committed report and output manifest.
+      manual_summary: {tasks: 40, samples: 40, syntax_pass_rate: 0.9000, functional_pass_rate: 0.4750, pass_at_k: {pass@1: 0.4750}, failure_categories: {passed: 19, equiv_failure: 17, synthesis_failure: 4}}
+      rtlopt_metrics: {equivalence_pass_rate: 0.4750, equiv_passing_tasks: 19, total_tasks: 40, improved_equiv_passing_tasks: 8, average_generic_cell_ratio_among_equiv_passing: 0.8709}
+    - id: rtlopt_equivalence_deepseek_coder
+      model: deepseek-coder-v2-lite-instruct
+      served_model_name: deepseek-coder-v2-lite
+      benchmark: rtlopt
+      mode: equivalence
+      evaluation_kind: equivalence
+      samples_per_task: 1
+      temperature: 0.2
+      top_p: 0.95
+      max_tokens: 4096
+      evaluator_type: yosys_equivalence
+      result_source: manual_summary
+      output_path: outputs/rtlopt/deepseek-coder-v2-lite/20260613T190310Z
+      summary_path: outputs/rtlopt/deepseek-coder-v2-lite/20260613T190310Z/summary.json
+      results_path: outputs/rtlopt/deepseek-coder-v2-lite/20260613T190310Z/results.jsonl
+      manifest_path: reports/deepseek_coder_v2_lite_instruct_output_manifest.md
+      report_path: reports/rtlopt_deepseek_coder_v2_lite_instruct_yosys_equiv_baseline.md
+      notes: Manual summary and optimization metrics transcribed from the committed report and output manifest.
+      manual_summary: {tasks: 40, samples: 40, syntax_pass_rate: 0.9000, functional_pass_rate: 0.7250, pass_at_k: {pass@1: 0.7250}, failure_categories: {passed: 29, equiv_failure: 5, synthesis_failure: 3, timeout: 2, code_extraction_failure: 1}}
+      rtlopt_metrics: {equivalence_pass_rate: 0.7250, equiv_passing_tasks: 29, total_tasks: 40, improved_equiv_passing_tasks: 3, average_generic_cell_ratio_among_equiv_passing: 0.9739}

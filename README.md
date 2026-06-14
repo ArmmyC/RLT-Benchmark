@@ -2,7 +2,7 @@
 
 RTLBench is a reusable benchmark harness for evaluating RTL-generating models through an OpenAI-compatible API. Model access, benchmark loading, code extraction, simulation, and reporting are separate components so models and benchmark suites can be changed independently.
 
-The first adapter supports VerilogEval-style JSONL/JSONL.GZ datasets. Planned adapters are RTLLM 2.0, ProtocolLLM, and RTL-OPT.
+The harness includes adapters for VerilogEval v2, RTLLM 2.0, ProtocolLLM public lint, and RTL-OPT lint/synthesis/equivalence.
 
 ## Layout
 
@@ -12,6 +12,8 @@ scripts/                  Lanta setup and Slurm launch scripts
 src/rtlbench/adapters/    Benchmark-specific task loaders and prompts
 src/rtlbench/             API client, extraction, evaluation, metrics, reports
 tests/                    Unit tests
+runs/                     Committed baseline run registry
+dashboard/                Generated static Baseline v0.1 dashboard
 benchmarks/               Local benchmark checkouts/data (gitignored)
 outputs/                  Timestamped run artifacts (gitignored)
 ```
@@ -122,3 +124,27 @@ Implement `BenchmarkAdapter.load_tasks()` and `build_prompt()`, then register th
 ```bash
 .conda-env/bin/python -m pytest
 ```
+
+## Baseline v0.1 Reproducibility Package
+
+Baseline v0.1 freezes the current five-model public RTL comparison in `runs/index.yaml`. Generated Markdown, JSON, CSV, and static HTML artifacts come from this registry rather than hand-maintained comparison tables.
+
+Regenerate the package from the repository root:
+
+```bash
+python scripts/generate_comparison_report.py --registry runs/index.yaml --baseline baseline_v0_1
+python scripts/analyze_cross_model_failures.py --registry runs/index.yaml --baseline baseline_v0_1
+python scripts/build_dashboard.py --registry runs/index.yaml --baseline baseline_v0_1
+python -m pytest
+```
+
+Open `dashboard/index.html` directly in a browser; it has no server or external CDN dependency.
+
+Historical LANTA output folders are not present in every checkout. The registry prefers an accessible `summary.json`, otherwise it uses an explicitly labeled `manual_summary` transcribed from committed reports/manifests. Missing `results.jsonl` files produce warnings and an empty per-task failure state rather than fabricated data.
+
+See:
+
+- `docs/baseline_v0.1.md` for registry maintenance and generated artifacts.
+- `docs/lanta_single_model_workflow.md` for the serving/benchmark ownership boundary.
+
+Model serving, swapping, SSH/Slurm orchestration, OpenWebUI, and LiteLLM belong to the separate `Lanta-LLM-Hosting` repository, not this benchmark repository.
