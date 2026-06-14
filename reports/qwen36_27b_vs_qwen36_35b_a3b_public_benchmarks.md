@@ -1,8 +1,8 @@
-# Qwen36-27B vs Qwen36-35B-A3B vs Qwen3-Coder vs Qwen2.5-Coder Public RTL Benchmark Comparison
+# Qwen36-27B vs Qwen36-35B-A3B vs Qwen3-Coder vs Qwen2.5-Coder vs DeepSeek-Coder Public RTL Benchmark Comparison
 
 ## Scope
 
-This report compares `qwen36-27b`, `qwen36-35b-a3b`, `qwen3-coder-30b-a3b-instruct`, and `qwen25-coder-32b` on public RTL benchmarks currently available in the harness.
+This report compares `qwen36-27b`, `qwen36-35b-a3b`, `qwen3-coder-30b-a3b-instruct`, `qwen25-coder-32b`, and `deepseek-coder-v2-lite-instruct` on public RTL benchmarks currently available in the harness.
 
 Comparison rule:
 
@@ -18,6 +18,7 @@ Comparison rule:
 | qwen36-35b-a3b result | Included in every result table under the `qwen36-35b-a3b` column. |
 | qwen3-coder-30b-a3b-instruct result | Included in every result table under the `qwen3-coder-30b-a3b-instruct` column. |
 | qwen25-coder-32b result | Included in every result table under the `qwen25-coder-32b` column. |
+| deepseek-coder-v2-lite-instruct result | Included in every result table under the `deepseek-coder-v2-lite-instruct` column. |
 | Same benchmark? | Yes. Each row below compares only the same benchmark and evaluation mode. |
 | Same samples_per_task? | Yes. Listed per benchmark/mode in the matched settings audit. |
 | Same temperature? | Yes. Listed per benchmark/mode in the matched settings audit. |
@@ -35,57 +36,57 @@ Comparison rule:
 | RTL-OPT generic synthesis | yes, RTL-OPT public benchmark | 1 | 0.2 | 0.95 | 4096 | synthesis-only |
 | RTL-OPT equivalence | yes, RTL-OPT public benchmark | 1 | 0.2 | 0.95 | 4096 | verified from run metadata and committed baseline reports; behavior-preserving optimization condition |
 
-The comparison below reports the four model results side by side only within the same benchmark and evaluation mode.
+The comparison below reports the five model results side by side only within the same benchmark and evaluation mode.
 
 ## Output Artifact Tracking
 
-Raw output folders are preserved on Lanta and are not committed to Git because `outputs/` is intentionally gitignored by repo policy. The committed output artifacts are the manifests, including `reports/qwen36_35b_a3b_output_manifest.md`, `reports/qwen3_coder_30b_a3b_instruct_output_manifest.md`, and `reports/qwen25_coder_32b_output_manifest.md`, which list the authoritative Lanta output folders. The committed artifacts are the benchmark configs, summary reports, output manifests, and this comparison report.
+Raw output folders are preserved on Lanta and are not committed to Git because `outputs/` is intentionally gitignored by repo policy. The committed output artifacts are the manifests, including `reports/qwen36_35b_a3b_output_manifest.md`, `reports/qwen3_coder_30b_a3b_instruct_output_manifest.md`, `reports/qwen25_coder_32b_output_manifest.md`, and `reports/deepseek_coder_v2_lite_instruct_output_manifest.md`, which list the authoritative Lanta output folders. The committed artifacts are the benchmark configs, summary reports, output manifests, and this comparison report.
 
 ## Functional RTL Generation
 
-| Benchmark | Metric | qwen36-27b | qwen36-35b-a3b | qwen3-coder-30b-a3b-instruct | qwen25-coder-32b |
-|---|---|---:|---:|---:|---:|
-| VerilogEval v2 | pass@1 functional | 0.6154 | 0.5705 | 0.4808 | 0.4487 |
-| VerilogEval v2 | pass@5 task recovery | 0.7756 | 0.7308 | 0.5705 | 0.5385 |
-| RTLLM 2.0 | pass@1 functional | 0.6000 | 0.6000 | 0.5000 | 0.5400 |
+| Benchmark | Metric | qwen36-27b | qwen36-35b-a3b | qwen3-coder-30b-a3b-instruct | qwen25-coder-32b | deepseek-coder-v2-lite-instruct |
+|---|---|---:|---:|---:|---:|---:|
+| VerilogEval v2 | pass@1 functional | 0.6154 | 0.5705 | 0.4808 | 0.4487 | 0.4872 |
+| VerilogEval v2 | pass@5 task recovery | 0.7756 | 0.7308 | 0.5705 | 0.5385 | 0.5641 |
+| RTLLM 2.0 | pass@1 functional | 0.6000 | 0.6000 | 0.5000 | 0.5400 | 0.5200 |
 
 ## Syntax / Compile Reliability
 
-| Benchmark | qwen36-27b | qwen36-35b-a3b | qwen3-coder-30b-a3b-instruct | qwen25-coder-32b |
-|---|---:|---:|---:|---:|
-| VerilogEval v2 pass@1 syntax | 0.8397 | 0.7564 | 0.8654 | 0.8846 |
-| VerilogEval v2 pass@5 syntax | 0.7962 | 0.7449 | 0.8628 | 0.8654 |
-| RTLLM 2.0 syntax | 0.7000 | 0.7800 | 0.6600 | 0.7400 |
+| Benchmark | qwen36-27b | qwen36-35b-a3b | qwen3-coder-30b-a3b-instruct | qwen25-coder-32b | deepseek-coder-v2-lite-instruct |
+|---|---:|---:|---:|---:|---:|
+| VerilogEval v2 pass@1 syntax | 0.8397 | 0.7564 | 0.8654 | 0.8846 | 0.8590 |
+| VerilogEval v2 pass@5 syntax | 0.7962 | 0.7449 | 0.8628 | 0.8654 | 0.8551 |
+| RTLLM 2.0 syntax | 0.7000 | 0.7800 | 0.6600 | 0.7400 | 0.7800 |
 
 ## Lint-Only Protocol Result
 
-| Benchmark | qwen36-27b | qwen36-35b-a3b | qwen3-coder-30b-a3b-instruct | qwen25-coder-32b |
-|---|---:|---:|---:|---:|
-| ProtocolLLM public lint | 0.7778 | 0.2222 | 0.7778 | 0.6667 |
+| Benchmark | qwen36-27b | qwen36-35b-a3b | qwen3-coder-30b-a3b-instruct | qwen25-coder-32b | deepseek-coder-v2-lite-instruct |
+|---|---:|---:|---:|---:|---:|
+| ProtocolLLM public lint | 0.7778 | 0.2222 | 0.7778 | 0.6667 | 0.6667 |
 
 This is lint-only. It does not measure protocol functional correctness.
 
 ## RTL-OPT Behavior-Preserving Optimization
 
-| Metric | qwen36-27b | qwen36-35b-a3b | qwen3-coder-30b-a3b-instruct | qwen25-coder-32b |
-|---|---:|---:|---:|---:|
-| RTL-OPT lint pass | 0.9250 | 0.8500 | 0.8250 | 0.9250 |
-| RTL-OPT generic synthesis pass | 0.9000 | 0.8750 | 0.9250 | 0.9000 |
-| RTL-OPT equivalence pass | 0.6250 | 0.4750 | 0.4750 | 0.4750 |
-| Equiv-passing tasks with fewer generic cells | 9 / 25 | 6 / 19 | 4 / 19 | 8 / 19 |
-| Average generic cell ratio among equiv-passing tasks | 0.9124 | 0.9003 | 0.9472 | 0.8709 |
+| Metric | qwen36-27b | qwen36-35b-a3b | qwen3-coder-30b-a3b-instruct | qwen25-coder-32b | deepseek-coder-v2-lite-instruct |
+|---|---:|---:|---:|---:|---:|
+| RTL-OPT lint pass | 0.9250 | 0.8500 | 0.8250 | 0.9250 | 0.9250 |
+| RTL-OPT generic synthesis pass | 0.9000 | 0.8750 | 0.9250 | 0.9000 | 0.9000 |
+| RTL-OPT equivalence pass | 0.6250 | 0.4750 | 0.4750 | 0.4750 | 0.7250 |
+| Equiv-passing tasks with fewer generic cells | 9 / 25 | 6 / 19 | 4 / 19 | 8 / 19 | 3 / 29 |
+| Average generic cell ratio among equiv-passing tasks | 0.9124 | 0.9003 | 0.9472 | 0.8709 | 0.9739 |
 
-Qwen2.5-Coder has the best average cell ratio among the tasks that pass equivalence, but it reaches equivalence on only 19 tasks, tied with qwen36-35B-A3B and qwen3-coder and below qwen36-27B.
+Qwen2.5-Coder has the best average cell ratio among the tasks that pass equivalence, but it reaches equivalence on only 19 tasks, tied with qwen36-35B-A3B and qwen3-coder and below qwen36-27B. DeepSeek-Coder has the strongest RTL-OPT equivalence coverage at 29 / 40, but only 3 of those passing tasks reduce generic cell count.
 
 ## Conclusion
 
-`qwen36-27b` remains the strongest public RTL benchmark baseline overall.
+`qwen36-27b` remains the strongest public RTL benchmark baseline overall for functional RTL generation. `deepseek-coder-v2-lite-instruct` is the strongest current baseline on RTL-OPT behavior-preserving equivalence coverage.
 
 - It is better on VerilogEval v2 pass@1 and pass@5.
-- It ties `qwen36-35b-a3b` and beats both coder models on RTLLM 2.0 functional pass@1.
+- It ties `qwen36-35b-a3b` and beats the coder-model baselines on RTLLM 2.0 functional pass@1.
 - It ties `qwen3-coder-30b-a3b-instruct` on ProtocolLLM public lint.
-- It is better on RTL-OPT equivalence pass rate and valid-improved task count.
+- It trails DeepSeek-Coder on RTL-OPT equivalence pass rate, but has more equivalence-passing tasks with fewer generic cells.
 
 The clearest advantages for `qwen25-coder-32b` are VerilogEval syntax pass rate and RTL-OPT equivalence-passing cell ratio. Those do not translate into stronger VerilogEval functional correctness, RTLLM functional correctness, or RTL-OPT equivalence coverage.
 
-Recommended next step: analyze why the coder models have high syntax reliability but lower functional simulation pass rates, especially the VerilogEval simulation-failure mix.
+Recommended next step: inspect DeepSeek RTL-OPT equivalence-passing outputs to understand why it preserves behavior more often but rarely reduces generic cell count.
