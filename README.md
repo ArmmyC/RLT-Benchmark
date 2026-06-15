@@ -153,12 +153,15 @@ Baseline v0.2 adds a lightweight, commit-safe per-task layer without changing th
 
 ```bash
 python scripts/export_per_task_results.py --registry runs/index.yaml --baseline baseline_v0_1 --output-dir artifacts/baseline_v0.2
+python scripts/audit_baseline_consistency.py --registry runs/index.yaml --baseline baseline_v0_1 --per-task-artifacts artifacts/baseline_v0.2/per_task_results.jsonl --output-md reports/baseline_v0.2_consistency_audit.md --output-csv reports/baseline_v0.2_consistency_audit.csv
 python scripts/analyze_cross_model_failures.py --registry runs/index.yaml --baseline baseline_v0_1 --per-task-artifacts artifacts/baseline_v0.2/per_task_results.jsonl --output-md reports/baseline_v0.2_failure_matrix.md --output-csv reports/baseline_v0.2_failure_matrix.csv
 python scripts/build_dashboard.py --registry runs/index.yaml --baseline baseline_v0_1
 python -m pytest
 ```
 
 Analysis uses accessible live `results.jsonl` first, sanitized artifacts second, and registered summaries last. Pass `--prefer-artifacts` to the analysis or dashboard command for a portable artifact-only view. The exporter never includes prompts, model responses, RTL, error-log contents, credentials, or paths to those raw artifacts.
+
+Before tagging a baseline, the consistency audit compares sanitized row and failure-category counts for every `source_run_id` against the summaries loaded from `runs/index.yaml`. Mismatches and missing run artifacts are warnings by default so the report can be reviewed; pass `--strict` to make either condition return a nonzero exit status. The audit is diagnostic and never rewrites registry summaries.
 
 See `docs/baseline_v0.2_per_task_failure_matrix.md` for the schema, source precedence, and limitations.
 
