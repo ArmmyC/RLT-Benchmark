@@ -183,4 +183,13 @@ python scripts/run_v0.3_prompt_larger.py --base-url "$OPENAI_BASE_URL"
 
 Omitting `--prompt-profile` preserves the historical runner behavior. See `docs/experiments/v0.3_qwen36_27b_prompt_experiments.md` for profile definitions, matched-setting rules, and the smoke-first expansion policy.
 
+## v0.4 PPA-Aware Optimization Design
+
+v0.4 defines a correctness-gated area/power scoring design before retesting the held-back `low_area_low_power` profile. No v0.4 model jobs are part of the design stage.
+
+See:
+
+- `docs/experiments/v0.4_ppa_aware_rtl_optimization.md` for the staged experiment plan.
+- `reports/v0.4_ppa_scoring_design.md` for scoring gates, formulas, sanitized fields, and public-flow limitations.
+
 Model serving, swapping, SSH/Slurm orchestration, OpenWebUI, and LiteLLM belong to the separate `Lanta-LLM-Hosting` repository, not this benchmark repository.
