@@ -80,11 +80,17 @@ def _collect_one(outputs_root: Path, benchmark: str, profile: str) -> SmokeSumma
     return SmokeSummary(benchmark, profile, "missing", None, None, None, None, None, None, {}, str(profile_root))
 
 
-def render_markdown(rows: list[SmokeSummary]) -> str:
+def render_markdown(
+    rows: list[SmokeSummary],
+    *,
+    title: str = "v0.3 qwen36-27b Prompt Smoke Summary",
+    description: str = "This report reads only `summary.json` and `run_metadata.json` from finished smoke runs.",
+    footer: str = "Review this smoke summary before scheduling any full benchmark run.",
+) -> str:
     lines = [
-        "# v0.3 qwen36-27b Prompt Smoke Summary",
+        f"# {title}",
         "",
-        "This report reads only `summary.json` and `run_metadata.json` from finished smoke runs.",
+        description,
     ]
     for benchmark in BENCHMARKS:
         benchmark_rows = [row for row in rows if row.benchmark == benchmark]
@@ -117,7 +123,7 @@ def render_markdown(rows: list[SmokeSummary]) -> str:
                 )
                 + " |"
             )
-    lines.extend(["", "Review this smoke summary before scheduling any full benchmark run.", ""])
+    lines.extend(["", footer, ""])
     return "\n".join(lines)
 
 

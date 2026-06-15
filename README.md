@@ -175,6 +175,12 @@ Preview the complete smoke matrix without executing model calls:
 python scripts/run_v0.3_prompt_smoke.py --base-url "$OPENAI_BASE_URL"
 ```
 
+Preview the larger validation slice selected by the candidate decision report. This remains dry-run by default and targets only `neutral_baseline` and `strict_rtl_only`:
+
+```bash
+python scripts/run_v0.3_prompt_larger.py --base-url "$OPENAI_BASE_URL"
+```
+
 Omitting `--prompt-profile` preserves the historical runner behavior. See `docs/experiments/v0.3_qwen36_27b_prompt_experiments.md` for profile definitions, matched-setting rules, and the smoke-first expansion policy.
 
 Model serving, swapping, SSH/Slurm orchestration, OpenWebUI, and LiteLLM belong to the separate `Lanta-LLM-Hosting` repository, not this benchmark repository.
