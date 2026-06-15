@@ -3,3 +3,7 @@ verilogeval,neutral_baseline,finished,3,3,3,1.0,3,1.0,"{""passed"": 3}",outputs/
 verilogeval,strict_rtl_only,finished,3,3,3,1.0,3,1.0,"{""passed"": 3}",outputs/experiments/v0.3_prompt_profiles/verilogeval/strict_rtl_only/verilogeval/qwen36-27b/20260615T044233Z
 verilogeval,low_area_low_power,finished,3,3,3,1.0,3,1.0,"{""passed"": 3}",outputs/experiments/v0.3_prompt_profiles/verilogeval/low_area_low_power/verilogeval/qwen36-27b/20260615T051024Z
 verilogeval,no_explanation_code_only,finished,3,3,3,1.0,3,1.0,"{""passed"": 3}",outputs/experiments/v0.3_prompt_profiles/verilogeval/no_explanation_code_only/verilogeval/qwen36-27b/20260615T051031Z
+rtllm2,neutral_baseline,finished,3,2,3,1.0,2,0.6666666666666666,"{""passed"": 2, ""simulation_failure"": 1}",outputs/experiments/v0.3_prompt_profiles/rtllm2/neutral_baseline/rtllm2/qwen36-27b/20260615T061206Z
+rtllm2,strict_rtl_only,finished,3,2,3,1.0,2,0.6666666666666666,"{""passed"": 2, ""simulation_failure"": 1}",outputs/experiments/v0.3_prompt_profiles/rtllm2/strict_rtl_only/rtllm2/qwen36-27b/20260615T061257Z
+rtllm2,low_area_low_power,finished,3,2,3,1.0,2,0.6666666666666666,"{""passed"": 2, ""simulation_failure"": 1}",outputs/experiments/v0.3_prompt_profiles/rtllm2/low_area_low_power/rtllm2/qwen36-27b/20260615T061337Z
+rtllm2,no_explanation_code_only,finished,3,1,2,0.6666666666666666,1,0.3333333333333333,"{""compile_failure"": 1, ""passed"": 1, ""simulation_failure"": 1}",outputs/experiments/v0.3_prompt_profiles/rtllm2/no_explanation_code_only/rtllm2/qwen36-27b/20260615T061433Z
