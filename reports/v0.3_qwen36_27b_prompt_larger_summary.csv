@@ -1,0 +1,7 @@
+benchmark,prompt_profile,status,samples,pass_count,syntax_pass_count,syntax_pass_rate,functional_or_equiv_pass_count,functional_or_equiv_pass_rate,failure_categories,output_path
+verilogeval,neutral_baseline,finished,20,19,19,0.95,19,0.95,"{""compile_failure"": 1, ""passed"": 19}",outputs/experiments/v0.3_prompt_profiles_larger/verilogeval/neutral_baseline/verilogeval/qwen36-27b/20260615T095521Z
+verilogeval,strict_rtl_only,finished,20,20,20,1.0,20,1.0,"{""passed"": 20}",outputs/experiments/v0.3_prompt_profiles_larger/verilogeval/strict_rtl_only/verilogeval/qwen36-27b/20260615T095547Z
+rtllm2,neutral_baseline,finished,10,4,5,0.5,4,0.4,"{""compile_failure"": 5, ""passed"": 4, ""simulation_failure"": 1}",outputs/experiments/v0.3_prompt_profiles_larger/rtllm2/neutral_baseline/rtllm2/qwen36-27b/20260615T095607Z
+rtllm2,strict_rtl_only,finished,10,4,5,0.5,4,0.4,"{""compile_failure"": 5, ""passed"": 4, ""simulation_failure"": 1}",outputs/experiments/v0.3_prompt_profiles_larger/rtllm2/strict_rtl_only/rtllm2/qwen36-27b/20260615T095850Z
+rtlopt,neutral_baseline,finished,10,8,10,1.0,8,0.8,"{""equiv_failure"": 2, ""passed"": 8}",outputs/experiments/v0.3_prompt_profiles_larger/rtlopt/neutral_baseline/rtlopt/qwen36-27b/20260615T100055Z
+rtlopt,strict_rtl_only,finished,10,7,10,1.0,7,0.7,"{""equiv_failure"": 3, ""passed"": 7}",outputs/experiments/v0.3_prompt_profiles_larger/rtlopt/strict_rtl_only/rtlopt/qwen36-27b/20260615T100146Z
