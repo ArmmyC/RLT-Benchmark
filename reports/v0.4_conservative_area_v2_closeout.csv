@@ -1,0 +1,5 @@
+profile,status,best_sample_count,valid_count,invalid_count,mean_valid_score,mean_all_sample_score,notes
+neutral_baseline,default,40,25,15,1.163902,0.727439,"Default baseline; Stage N covered all 40 public RTL-OPT adapter tasks in this repo."
+low_area_low_power,held_back,5,2,3,1.104430,0.441772,"Held back after Stage J: lost validity versus neutral and did not improve paired score."
+conservative_area,held_back,20,12,8,1.124249,0.674549,"Held back after Stage L: lower validity than neutral, lost adder/divider_4bit/fsm, and regressed decoder_6bit."
+conservative_area_v2,challenger,40,30,10,1.125223,0.843917,"v0.4 public RTL-OPT challenger; Stage N gained five validity records, lost none, improved two paired tasks, matched 21, regressed two."

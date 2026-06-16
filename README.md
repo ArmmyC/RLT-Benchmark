@@ -185,11 +185,12 @@ Omitting `--prompt-profile` preserves the historical runner behavior. See `docs/
 
 ## v0.4 PPA-Aware Optimization Design
 
-v0.4 defines a correctness-gated area/power scoring design before retesting the held-back `low_area_low_power` profile. No v0.4 model jobs are part of the design stage.
+v0.4 defines a correctness-gated area/power scoring design before retesting held-back prompt profiles. The public RTL-OPT closeout keeps `neutral_baseline` as the default baseline and designates `conservative_area_v2` as the v0.4 public RTL-OPT challenger.
 
 See:
 
 - `docs/experiments/v0.4_ppa_aware_rtl_optimization.md` for the staged experiment plan.
 - `reports/v0.4_ppa_scoring_design.md` for scoring gates, formulas, sanitized fields, and public-flow limitations.
+- `reports/v0.4_conservative_area_v2_closeout.md` for the public RTL-OPT challenger decision record.
 
 Model serving, swapping, SSH/Slurm orchestration, OpenWebUI, and LiteLLM belong to the separate `Lanta-LLM-Hosting` repository, not this benchmark repository.

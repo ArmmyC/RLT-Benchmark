@@ -684,3 +684,20 @@ baseline_v0_1:
       notes: Manual summary and optimization metrics transcribed from the committed report and output manifest.
       manual_summary: {tasks: 40, samples: 40, syntax_pass_rate: 0.9000, functional_pass_rate: 0.7250, pass_at_k: {pass@1: 0.7250}, failure_categories: {passed: 29, equiv_failure: 5, synthesis_failure: 3, timeout: 2, code_extraction_failure: 1}}
       rtlopt_metrics: {equivalence_pass_rate: 0.7250, equiv_passing_tasks: 29, total_tasks: 40, improved_equiv_passing_tasks: 3, average_generic_cell_ratio_among_equiv_passing: 0.9739}
+
+v0_4_ppa_public_rtlopt_closeout:
+  name: v0.4 Public RTL-OPT PPA Closeout
+  description: Sanitized area-only closeout for qwen36-27b prompt profiles on the public RTL-OPT adapter.
+  created_utc: "2026-06-16T00:00:00Z"
+  status: closed
+  benchmark: rtlopt
+  model: qwen36-27b
+  scoring_mode: area_only
+  area_unit: generic_cells
+  power_status: power_unavailable
+  default_profile: neutral_baseline
+  challenger_profile: conservative_area_v2
+  report_path: reports/v0.4_conservative_area_v2_closeout.md
+  summary_csv_path: reports/v0.4_conservative_area_v2_closeout.csv
+  comparison_report_path: reports/v0.4_ppa_validation40_neutral_vs_conservative_v2.md
+  notes: Stage N covered the complete 40-task public RTL-OPT adapter task set currently loaded in this repo. Results are generic-cell proxy, area-only, public RTL-OPT validation; no measured power, timing, private-benchmark, or final-silicon PPA claim.
