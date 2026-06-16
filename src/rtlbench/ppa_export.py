@@ -143,7 +143,9 @@ def _select_area_source(metrics: dict[str, Any]) -> _AreaSource:
     generated_area = _optional_number(metrics.get("generated_area"))
     reference_area = _optional_number(metrics.get("reference_area"))
     baseline_area = _optional_number(metrics.get("baseline_area"))
-    if generated_area is not None and _valid_metric(reference_area):
+    generic_baseline_cells = _optional_number(metrics.get("generic_baseline_cells"))
+    generated_cells = _optional_number(metrics.get("generated_cells"))
+    if _valid_metric(generated_area) and _valid_metric(reference_area):
         return _AreaSource(
             reference_area=reference_area,
             generated_area=generated_area,
@@ -151,12 +153,20 @@ def _select_area_source(metrics: dict[str, Any]) -> _AreaSource:
             generic_proxy=False,
         )
 
-    if generated_area is not None and _valid_metric(baseline_area):
+    if _valid_metric(generated_area) and _valid_metric(baseline_area):
         return _AreaSource(
             reference_area=baseline_area,
             generated_area=generated_area,
             area_unit=_area_unit(metrics, "mapped_area"),
             generic_proxy=False,
+        )
+
+    if _valid_metric(generic_baseline_cells) and _valid_metric(generated_cells):
+        return _AreaSource(
+            reference_area=generic_baseline_cells,
+            generated_area=generated_cells,
+            area_unit="generic_cells",
+            generic_proxy=True,
         )
 
     if generated_area is not None or reference_area is not None:
@@ -176,8 +186,8 @@ def _select_area_source(metrics: dict[str, Any]) -> _AreaSource:
         )
 
     return _AreaSource(
-        reference_area=_optional_number(metrics.get("generic_baseline_cells")),
-        generated_area=_optional_number(metrics.get("generated_cells")),
+        reference_area=generic_baseline_cells,
+        generated_area=generated_cells,
         area_unit="generic_cells",
         generic_proxy=True,
     )

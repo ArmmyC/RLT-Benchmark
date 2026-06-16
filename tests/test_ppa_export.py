@@ -58,6 +58,49 @@ def test_valid_mapped_area_row_exports_area_only_score() -> None:
     assert record.optimization_score == pytest.approx(1.25)
 
 
+def test_mapped_reference_area_has_highest_priority_over_generic_cells() -> None:
+    row = rtlopt_row(
+        evaluation_metrics={
+            "reference_area": 100.0,
+            "baseline_area": 120.0,
+            "generated_area": 80.0,
+            "generic_baseline_cells": 50,
+            "generated_cells": 25,
+            "equivalence_proven": 1,
+        }
+    )
+
+    record = result_row_to_ppa_record(row, prompt_profile="neutral_baseline")
+
+    assert record.score_status == "valid"
+    assert record.area_unit == "mapped_area"
+    assert record.toolchain_id == "yosys-mapped-area"
+    assert record.reference_area == 100.0
+    assert record.generated_area == 80.0
+    assert record.optimization_score == pytest.approx(1.25)
+
+
+def test_mapped_baseline_area_has_second_priority_over_generic_cells() -> None:
+    row = rtlopt_row(
+        evaluation_metrics={
+            "baseline_area": 120.0,
+            "generated_area": 80.0,
+            "generic_baseline_cells": 50,
+            "generated_cells": 25,
+            "equivalence_proven": 1,
+        }
+    )
+
+    record = result_row_to_ppa_record(row, prompt_profile="neutral_baseline")
+
+    assert record.score_status == "valid"
+    assert record.area_unit == "mapped_area"
+    assert record.toolchain_id == "yosys-mapped-area"
+    assert record.reference_area == 120.0
+    assert record.generated_area == 80.0
+    assert record.optimization_score == pytest.approx(1.5)
+
+
 def test_valid_generic_cell_row_exports_generic_proxy() -> None:
     row = rtlopt_row(
         evaluation_metrics={
@@ -72,6 +115,46 @@ def test_valid_generic_cell_row_exports_generic_proxy() -> None:
     assert record.score_status == "valid"
     assert record.area_unit == "generic_cells"
     assert record.toolchain_id == "yosys-generic-cell-count-proxy"
+    assert record.optimization_score == pytest.approx(1.25)
+
+
+def test_incomplete_reference_mapped_area_falls_through_to_generic_cells() -> None:
+    row = rtlopt_row(
+        evaluation_metrics={
+            "reference_area": 100.0,
+            "generated_cells": 40,
+            "generic_baseline_cells": 50,
+            "equivalence_proven": 1,
+        }
+    )
+
+    record = result_row_to_ppa_record(row, prompt_profile="neutral_baseline")
+
+    assert record.score_status == "valid"
+    assert record.area_unit == "generic_cells"
+    assert record.toolchain_id == "yosys-generic-cell-count-proxy"
+    assert record.reference_area == 50
+    assert record.generated_area == 40
+    assert record.optimization_score == pytest.approx(1.25)
+
+
+def test_incomplete_baseline_mapped_area_falls_through_to_generic_cells() -> None:
+    row = rtlopt_row(
+        evaluation_metrics={
+            "baseline_area": 120.0,
+            "generated_cells": 40,
+            "generic_baseline_cells": 50,
+            "equivalence_proven": 1,
+        }
+    )
+
+    record = result_row_to_ppa_record(row, prompt_profile="neutral_baseline")
+
+    assert record.score_status == "valid"
+    assert record.area_unit == "generic_cells"
+    assert record.toolchain_id == "yosys-generic-cell-count-proxy"
+    assert record.reference_area == 50
+    assert record.generated_area == 40
     assert record.optimization_score == pytest.approx(1.25)
 
 
@@ -120,6 +203,23 @@ def test_missing_metric_becomes_invalid() -> None:
     assert record.score_status == "invalid"
     assert record.synth_pass is True
     assert record.failure_category == "invalid_area_metric"
+
+
+def test_missing_generated_metrics_remain_invalid() -> None:
+    row = rtlopt_row(
+        evaluation_metrics={
+            "reference_area": 100.0,
+            "generic_baseline_cells": 50,
+            "equivalence_proven": 1,
+        }
+    )
+
+    record = result_row_to_ppa_record(row, prompt_profile="neutral_baseline")
+
+    assert record.score_status == "invalid"
+    assert record.synth_pass is False
+    assert record.failure_category == "synthesis_failure"
+    assert record.optimization_score is None
 
 
 def test_unsupported_benchmark_is_rejected() -> None:
@@ -212,3 +312,28 @@ def test_exported_jsonl_can_be_summarized_by_v0_4_script(tmp_path) -> None:
     assert status == 0
     assert "v0.4 Sanitized PPA Summary" in md_path.read_text(encoding="utf-8")
     assert "neutral_baseline" in csv_path.read_text(encoding="utf-8")
+
+
+def test_stage_h_like_generic_cells_row_summarizes_as_valid_area_only(tmp_path) -> None:
+    row = rtlopt_row(
+        evaluation_metrics={
+            "reference_area": 202.692,
+            "baseline_area": 257.0,
+            "generated_cells": 230,
+            "generic_baseline_cells": 230,
+            "generic_reference_cells": 267,
+            "equivalence_proven": 1,
+        }
+    )
+    records = export_ppa_records([row], prompt_profile="neutral_baseline", source_run_id="stage-h-like")
+    ppa_path = tmp_path / "ppa.jsonl"
+    ppa_path.write_text(render_ppa_jsonl(records), encoding="utf-8")
+
+    loaded = load_sanitized_jsonl(ppa_path)
+    summaries = summarize_records(loaded)
+
+    assert loaded[0].score_status == "valid"
+    assert loaded[0].area_unit == "generic_cells"
+    assert loaded[0].toolchain_id == "yosys-generic-cell-count-proxy"
+    assert summaries[0].valid_scores == 1
+    assert summaries[0].mean_valid_score == pytest.approx(1.0)
