@@ -4,8 +4,10 @@ import re
 import shutil
 import subprocess
 import sys
+import os
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Mapping
 
 from rtlbench.types import BenchmarkTask, EvaluationResult
 
@@ -17,6 +19,22 @@ YOSYS_STAT_RE = {
     "cells": re.compile(r"(?:Number of cells:\s+(\d+)|^\s*(\d+)\s+cells?\s*$)", re.MULTILINE),
     "area": re.compile(r"Chip area for module[^:]+:\s*([\d.]+(?:[eE][-+]?\d+)?)"),
 }
+TECHMAP_ENV_VARS = ("RTLBench_YOSYS_TECHMAP", "YOSYS_TECHMAP")
+
+
+@dataclass(frozen=True)
+class YosysTechmapResolution:
+    path: Path | None
+    mode: str
+
+    @property
+    def is_explicit(self) -> bool:
+        return self.path is not None
+
+    def describe(self) -> str:
+        if self.path is None:
+            return "bare fallback"
+        return f"{self.mode}: {self.path}"
 
 
 class IcarusEvaluator:
@@ -141,6 +159,7 @@ class YosysPPAEvaluator:
         self.executable = resolved
         self.timeout = timeout
         self.use_abc = use_abc
+        self.techmap = resolve_yosys_techmap(resolved)
 
     def evaluate(self, task: BenchmarkTask, rtl_path: Path, work_dir: Path) -> EvaluationResult:
         top = task.module_name or "top"
@@ -199,21 +218,21 @@ class YosysPPAEvaluator:
         script_path = work_dir / f"{stem}_yosys.ys"
         report_path = work_dir / f"{stem}_yosys_stat.rpt"
         lines = [
-            f"read -sv {rtl_path.resolve()}",
+            f"read -sv {_yosys_path(rtl_path.resolve())}",
             f"hierarchy -top {top}",
             "proc; fsm; opt; memory; opt",
-            "techmap; opt",
+            yosys_techmap_command(self.techmap),
         ]
         if liberty_path is not None:
             lines.extend(
                 [
-                    f"dfflibmap -liberty {liberty_path.resolve()}",
-                    f"abc -liberty {liberty_path.resolve()}",
-                    f"tee -o {report_path.resolve()} stat -top {top} -liberty {liberty_path.resolve()}",
+                    f"dfflibmap -liberty {_yosys_path(liberty_path.resolve())}",
+                    f"abc -liberty {_yosys_path(liberty_path.resolve())}",
+                    f"tee -o {_yosys_path(report_path.resolve())} stat -top {top} -liberty {_yosys_path(liberty_path.resolve())}",
                 ]
             )
         else:
-            lines.append(f"tee -o {report_path.resolve()} stat -top {top}")
+            lines.append(f"tee -o {_yosys_path(report_path.resolve())} stat -top {top}")
         lines.extend(["clean", ""])
         script_path.write_text("\n".join(lines), encoding="utf-8")
         command = [self.executable, str(script_path.resolve())]
@@ -232,7 +251,7 @@ class YosysPPAEvaluator:
         return {
             "returncode": completed.returncode,
             "metrics": metrics,
-            "log": _command_log(command, completed.stdout, completed.stderr),
+            "log": _techmap_log(self.techmap) + _command_log(command, completed.stdout, completed.stderr),
         }
 
 
@@ -282,11 +301,11 @@ class YosysEquivalenceEvaluator:
         script_path.write_text(
             "\n".join(
                 [
-                    f"read -sv {gold_path.resolve()}",
+                    f"read -sv {_yosys_path(gold_path.resolve())}",
                     "prep -top gold",
                     "design -stash gold",
                     "design -reset",
-                    f"read -sv {gate_path.resolve()}",
+                    f"read -sv {_yosys_path(gate_path.resolve())}",
                     "prep -top gate",
                     "design -stash gate",
                     "design -reset",
@@ -344,6 +363,61 @@ def parse_yosys_stat(text: str) -> dict[str, Any]:
         value = next(group for group in match.groups() if group is not None)
         metrics[name] = float(value) if name == "area" else int(value)
     return metrics
+
+
+def resolve_yosys_techmap(
+    yosys_executable: str | Path,
+    environ: Mapping[str, str] | None = None,
+) -> YosysTechmapResolution:
+    env = environ if environ is not None else os.environ
+    for name in TECHMAP_ENV_VARS:
+        candidate = _env_file(env.get(name))
+        if candidate is not None:
+            return YosysTechmapResolution(candidate, name)
+
+    datdir = env.get("YOSYS_DATDIR")
+    if datdir:
+        candidate = Path(datdir).expanduser() / "techmap.v"
+        if candidate.is_file():
+            return YosysTechmapResolution(candidate.resolve(), "YOSYS_DATDIR")
+
+    executable = Path(yosys_executable).expanduser()
+    if not executable.is_absolute():
+        resolved = shutil.which(str(executable))
+        if resolved:
+            executable = Path(resolved)
+    if executable.is_file():
+        executable_dir = executable.resolve().parent
+        for candidate in (
+            executable_dir / ".." / "share" / "yosys" / "techmap.v",
+            executable_dir / ".." / "share" / "techmap.v",
+        ):
+            if candidate.is_file():
+                return YosysTechmapResolution(candidate.resolve(), "near_yosys_executable")
+
+    return YosysTechmapResolution(None, "bare")
+
+
+def yosys_techmap_command(resolution: YosysTechmapResolution) -> str:
+    if resolution.path is None:
+        return "techmap; opt"
+    return f"techmap -map {_yosys_path(resolution.path)}; opt"
+
+
+def _env_file(value: str | None) -> Path | None:
+    if not value:
+        return None
+    candidate = Path(value).expanduser()
+    return candidate.resolve() if candidate.is_file() else None
+
+
+def _techmap_log(resolution: YosysTechmapResolution) -> str:
+    return f"Yosys techmap mode: {resolution.describe()}\n"
+
+
+def _yosys_path(path: Path) -> str:
+    text = str(path).replace("\\", "/").replace('"', '\\"')
+    return f'"{text}"'
 
 
 def _rename_first_module(source: str, new_name: str) -> str:
