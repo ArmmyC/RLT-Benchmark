@@ -1,0 +1,6 @@
+task_id,generation_status,extraction_status,candidate_file_available,compile_pass,correctness_pass,synth_pass,timing_status,area_metric_available,activity_metric_available,score_status,score,failure_category,analysis_category,retry_recommendation
+ap_001_idle_counter,completed,failed,False,False,False,False,not_required,False,False,invalid,,candidate_missing,empty_or_incomplete_response,targeted_3_sample_retry
+ap_002_command_decoder,completed,passed,True,True,True,True,not_required,True,True,valid,1.000000,passed,valid_reference_equivalent_score,no_retry
+ap_003_register_bank_unnecessary_writes,completed,passed,True,True,True,True,not_required,True,True,valid,1.076923,passed,valid_area_better_activity_equal,no_retry
+ap_004_crc_serial_parallel_tradeoff,completed,passed,True,True,True,True,not_required,True,True,valid,0.946154,passed,valid_area_better_activity_worse,no_retry
+ap_005_fsm_controller_idle_activity,completed,passed,True,True,True,True,not_required,True,True,valid,0.764706,passed,valid_area_worse_activity_equal,no_retry
