@@ -645,6 +645,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--top-p", type=float, default=1.0)
     parser.add_argument("--max-tokens", type=int, default=4096)
     parser.add_argument("--prompt-profile", default=DEFAULT_PROMPT_PROFILE)
+    parser.add_argument(
+        "--require-models-preflight",
+        action="store_true",
+        help="Require /models to answer before generation; disabled by default for local OpenAI-compatible endpoints.",
+    )
     return parser.parse_args()
 
 
@@ -658,14 +663,10 @@ def main() -> int:
     endpoint = load_endpoint_config()
     tools = detect_tools()
     run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    reachable = endpoint_reachable(endpoint)
 
-    if not endpoint.available or not reachable or not tools_available(tools):
+    if not endpoint.available or not tools_available(tools):
         endpoint_note = None
         endpoint_status = endpoint.status
-        if endpoint.available and not reachable:
-            endpoint_status = "unavailable"
-            endpoint_note = "3-sample baseline blocked because configured endpoint did not answer model listing"
         rows = make_blocker_rows(
             tasks=tasks,
             endpoint=endpoint,
@@ -677,6 +678,21 @@ def main() -> int:
             max_tokens=args.max_tokens,
             endpoint_status=endpoint_status,
             endpoint_unavailable_note=endpoint_note,
+        )
+    elif args.require_models_preflight and not endpoint_reachable(endpoint):
+        rows = make_blocker_rows(
+            tasks=tasks,
+            endpoint=endpoint,
+            tools=tools,
+            samples=args.samples_per_task,
+            prompt_profile=args.prompt_profile,
+            temperature=args.temperature,
+            top_p=args.top_p,
+            max_tokens=args.max_tokens,
+            endpoint_status="unavailable",
+            endpoint_unavailable_note=(
+                "3-sample baseline blocked because required model listing preflight failed"
+            ),
         )
     else:
         candidate_id = make_candidate_id(endpoint.model or DEFAULT_MODEL)

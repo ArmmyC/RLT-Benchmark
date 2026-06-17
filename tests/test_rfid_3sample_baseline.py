@@ -90,9 +90,100 @@ def test_blocker_rows_cover_five_tasks_and_three_samples() -> None:
         item.sanitized_dict()
 
 
+def test_missing_tools_create_tool_blocker_rows() -> None:
+    config = baseline.EndpointConfig(
+        base_url="http://127.0.0.1:8000/v1",
+        credential="local-vllm-no-auth",
+        model="qwen36-27b",
+        timeout_seconds=1.0,
+    )
+    rows = baseline.make_blocker_rows(
+        tasks=tasks(),
+        endpoint=config,
+        tools=baseline.ToolAvailability(iverilog=None, vvp="vvp", yosys="yosys"),
+        samples=3,
+        prompt_profile="neutral_baseline",
+        temperature=0.0,
+        top_p=1.0,
+        max_tokens=4096,
+    )
+
+    assert len(rows) == 15
+    assert {item.failure_category for item in rows} == {"tool_unavailable"}
+    assert {item.endpoint_status for item in rows} == {"available"}
+
+
 def test_aggregate_score_value_zero_fills_invalid_rows() -> None:
     assert baseline.aggregate_score_value(row()) == 0.0
     assert baseline.aggregate_score_value(row(score_status="valid", score=1.25)) == 1.25
+
+
+def test_request_failures_are_sanitized_rows() -> None:
+    task = tasks()[0]
+    config = baseline.EndpointConfig(
+        base_url="http://127.0.0.1:8000/v1",
+        credential="local-vllm-no-auth",
+        model="qwen36-27b",
+        timeout_seconds=1.0,
+    )
+    generation = baseline.GenerationRecord(
+        task_id=task.task_id,
+        sample_id=1,
+        generation_status="request_failed",
+        extraction_status="not_run",
+        candidate_file_available=False,
+        failure_category="request_failed",
+        notes="generation request failed: connection reset",
+    )
+    evaluation = baseline.CandidateEvaluationRow(
+        task_id=task.task_id,
+        candidate_id="sample_01",
+        final_pass=False,
+        candidate_file_available=False,
+        compile_pass=False,
+        correctness_pass=False,
+        synth_pass=False,
+        timing_status="not_required",
+        reference_area=15.0,
+        generated_area=None,
+        area_unit="generic_cells",
+        reference_activity=34.0,
+        generated_activity=None,
+        activity_metric="total_signal_toggles",
+        area_score=None,
+        activity_score=None,
+        score=None,
+        score_status="invalid",
+        failure_category="candidate_missing",
+        toolchain_id="iverilog-vcd-yosys-generic",
+        workload_id="ap_001_idle_counter_default",
+        notes="candidate file missing",
+    )
+
+    rows = baseline.merge_rows(
+        tasks=[task],
+        endpoint=config,
+        prompt_profile="neutral_baseline",
+        temperature=0.0,
+        top_p=1.0,
+        max_tokens=4096,
+        samples=1,
+        generation_records={(task.task_id, 1): generation},
+        evaluation_rows={(task.task_id, 1): evaluation},
+    )
+
+    assert rows[0].failure_category == "request_failed"
+    assert rows[0].generation_status == "request_failed"
+    assert rows[0].endpoint_status == "available"
+    rows[0].sanitized_dict()
+
+
+def test_models_preflight_is_not_required_by_default(monkeypatch) -> None:
+    monkeypatch.setattr(sys, "argv", ["run_rfid_apbench_3sample_baseline.py"])
+
+    args = baseline.parse_args()
+
+    assert args.require_models_preflight is False
 
 
 def test_report_writers_emit_sanitized_baseline(tmp_path: Path) -> None:
