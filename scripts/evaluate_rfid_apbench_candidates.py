@@ -143,9 +143,11 @@ def evaluate_candidates(
     candidate_root: Path,
     work_dir: Path,
     tools: ToolAvailability | None = None,
+    task_ids: tuple[str, ...] | None = None,
 ) -> list[CandidateEvaluationRow]:
     tools = tools or detect_tools()
-    tasks = list(RFIDAPBenchAdapter(benchmark_root).load_task_infos())
+    split = ",".join(task_ids) if task_ids else None
+    tasks = list(RFIDAPBenchAdapter(benchmark_root, split=split).load_task_infos())
     candidate_id = candidate_root.name
     rows: list[CandidateEvaluationRow] = []
     for task in tasks:

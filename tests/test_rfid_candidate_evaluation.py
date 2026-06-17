@@ -64,6 +64,27 @@ def test_candidate_path_mapping() -> None:
     assert path == CANDIDATE_ROOT / "ap_001_idle_counter.sv"
 
 
+def test_evaluate_candidates_filters_manifest_tasks(monkeypatch, tmp_path: Path) -> None:
+    monkeypatch.setattr(
+        candidate_eval,
+        "evaluate_task_candidate",
+        lambda **kwargs: row(task_id=kwargs["task"].task_id),
+    )
+
+    results = candidate_eval.evaluate_candidates(
+        benchmark_root=BENCHMARK_ROOT,
+        candidate_root=CANDIDATE_ROOT,
+        work_dir=tmp_path,
+        tools=candidate_eval.ToolAvailability(iverilog=None, vvp=None, yosys=None),
+        task_ids=("ap_010_retry_timeout_fsm", "ap_001_idle_counter"),
+    )
+
+    assert [result.task_id for result in results] == [
+        "ap_001_idle_counter",
+        "ap_010_retry_timeout_fsm",
+    ]
+
+
 def test_load_reference_metrics() -> None:
     metrics = candidate_eval.load_reference_metrics(first_task())
 

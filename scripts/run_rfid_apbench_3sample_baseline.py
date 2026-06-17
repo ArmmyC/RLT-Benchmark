@@ -174,8 +174,21 @@ class BaselineRow:
         return {key: "" if data[key] is None else str(data[key]) for key in REPORT_FIELDS}
 
 
-def load_tasks(benchmark_root: Path) -> list[RFIDAPBenchTaskInfo]:
-    return list(RFIDAPBenchAdapter(benchmark_root).load_task_infos())
+def load_tasks(
+    benchmark_root: Path,
+    task_ids: list[str] | None = None,
+) -> list[RFIDAPBenchTaskInfo]:
+    tasks = list(RFIDAPBenchAdapter(benchmark_root).load_task_infos())
+    if task_ids is None:
+        return tasks
+    if len(task_ids) != len(set(task_ids)):
+        raise ValueError("--task-id values must be unique")
+    available = {task.task_id for task in tasks}
+    missing = sorted(set(task_ids) - available)
+    if missing:
+        raise ValueError(f"unknown RFID-APBench task id(s): {', '.join(missing)}")
+    selected = set(task_ids)
+    return [task for task in tasks if task.task_id in selected]
 
 
 def tools_available(tools: ToolAvailability) -> bool:
@@ -440,6 +453,7 @@ def evaluate_samples(
     work_dir: Path,
     samples: int,
     tools: ToolAvailability,
+    task_ids: tuple[str, ...] | None = None,
 ) -> dict[tuple[str, int], CandidateEvaluationRow]:
     evaluated: dict[tuple[str, int], CandidateEvaluationRow] = {}
     for sample_id in range(1, samples + 1):
@@ -449,6 +463,7 @@ def evaluate_samples(
             candidate_root=candidate_root / sample_name,
             work_dir=work_dir / sample_name,
             tools=tools,
+            task_ids=task_ids,
         )
         for row in rows:
             evaluated[(row.task_id, sample_id)] = row
@@ -800,6 +815,12 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run v0.6 RFID-APBench 3-sample model baseline.")
     parser.add_argument("--benchmark-root", type=Path, default=Path("benchmarks/rfid_apbench"))
     parser.add_argument("--samples-per-task", type=int, default=SAMPLES_PER_TASK)
+    parser.add_argument(
+        "--task-id",
+        dest="task_ids",
+        action="append",
+        help="Run only this manifest task id; repeat for multiple targeted tasks.",
+    )
     parser.add_argument("--work-dir", type=Path, default=Path(".tmp/rfid_apbench_3sample_baseline"))
     parser.add_argument("--output-root", type=Path, default=Path("outputs/rfid_apbench/3sample_baseline"))
     parser.add_argument("--output-md", type=Path, default=Path("reports/v0.6_rfid_apbench_3sample_baseline.md"))
@@ -823,7 +844,7 @@ def main() -> int:
         raise ValueError("v0.6 RFID-APBench baseline is bounded to exactly 3 samples per task")
 
     benchmark_root = args.benchmark_root.resolve()
-    tasks = load_tasks(benchmark_root)
+    tasks = load_tasks(benchmark_root, args.task_ids)
     endpoint = load_endpoint_config()
     tools = detect_tools()
     run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
@@ -878,6 +899,7 @@ def main() -> int:
             work_dir=(args.work_dir / "evaluation").resolve(),
             samples=args.samples_per_task,
             tools=tools,
+            task_ids=tuple(task.task_id for task in tasks),
         )
         rows = merge_rows(
             tasks=tasks,

@@ -73,6 +73,30 @@ def test_runner_loads_current_ten_task_benchmark() -> None:
     assert [task.task_id for task in loaded] == [task.task_id for task in tasks()]
 
 
+def test_runner_loads_only_selected_manifest_tasks() -> None:
+    loaded = baseline.load_tasks(
+        BENCHMARK_ROOT,
+        ["ap_010_retry_timeout_fsm", "ap_001_idle_counter"],
+    )
+
+    assert [task.task_id for task in loaded] == [
+        "ap_001_idle_counter",
+        "ap_010_retry_timeout_fsm",
+    ]
+
+
+@pytest.mark.parametrize(
+    "task_ids",
+    [
+        ["ap_001_idle_counter", "ap_001_idle_counter"],
+        ["ap_999_unknown"],
+    ],
+)
+def test_runner_rejects_invalid_task_selection(task_ids: list[str]) -> None:
+    with pytest.raises(ValueError):
+        baseline.load_tasks(BENCHMARK_ROOT, task_ids)
+
+
 def test_blocker_rows_cover_ten_tasks_and_three_samples() -> None:
     config = baseline.EndpointConfig(
         base_url=None,
@@ -380,6 +404,24 @@ def test_models_preflight_is_not_required_by_default(monkeypatch) -> None:
     args = baseline.parse_args()
 
     assert args.require_models_preflight is False
+
+
+def test_task_id_filters_are_repeatable(monkeypatch) -> None:
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "run_rfid_apbench_3sample_baseline.py",
+            "--task-id",
+            "ap_001_idle_counter",
+            "--task-id",
+            "ap_010_retry_timeout_fsm",
+        ],
+    )
+
+    args = baseline.parse_args()
+
+    assert args.task_ids == ["ap_001_idle_counter", "ap_010_retry_timeout_fsm"]
 
 
 def test_main_rejects_samples_per_task_other_than_three(monkeypatch) -> None:
