@@ -20,10 +20,11 @@ module testbench;
 
     task automatic write_reg(input [1:0] a, input [7:0] d);
         begin
+            @(negedge clk);
             addr = a;
             write_data = d;
             write_en = 1'b1;
-            @(posedge clk);
+            @(negedge clk);
             write_en = 1'b0;
             #1;
             if (read_data !== d) $fatal(1, "write/read mismatch");
@@ -42,6 +43,7 @@ module testbench;
         write_reg(2'd0, 8'h12);
         write_reg(2'd1, 8'h34);
         write_reg(2'd1, 8'h34);
+        @(negedge clk);
         addr = 2'd0;
         #1;
         if (read_data !== 8'h12) $fatal(1, "readback failed");

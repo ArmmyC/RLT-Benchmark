@@ -184,9 +184,12 @@ def validate_task_reference(
         synth_result = _run_command(
             [
                 tools.yosys or "yosys",
-                "-q",
                 "-p",
-                f"read_verilog -sv {task.reference_path.as_posix()}; synth -top {task.top_module}; stat",
+                (
+                    f"read_verilog -sv {task.reference_path.as_posix()}; "
+                    f"hierarchy -top {task.top_module}; "
+                    "proc; opt; memory; opt; fsm; opt; stat"
+                ),
             ],
             cwd=task_work_dir,
         )
@@ -238,9 +241,12 @@ def validate_task_reference(
 
 def parse_yosys_generic_cell_count(stdout: str) -> int | None:
     matches = re.findall(r"Number of cells:\s+([0-9]+)", stdout)
-    if not matches:
-        return None
-    return int(matches[-1])
+    if matches:
+        return int(matches[-1])
+    stat_matches = re.findall(r"^\s*([0-9]+)\s+cells\s*$", stdout, flags=re.MULTILINE)
+    if stat_matches:
+        return int(stat_matches[-1])
+    return None
 
 
 def write_csv_report(rows: list[ReferenceValidationRow], output_csv: Path) -> None:

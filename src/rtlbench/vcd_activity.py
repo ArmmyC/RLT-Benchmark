@@ -51,7 +51,9 @@ def count_vcd_toggles(
         if line.startswith("$var"):
             signal = _parse_var(line)
             if signal.code in signals:
-                raise VCDActivityError(f"duplicate VCD identifier: {signal.code}")
+                # VCD writers may use one identifier for aliased nets across scopes.
+                # Count the aliased signal once under the first public name.
+                continue
             signals[signal.code] = signal
             toggles[signal.name] = 0
             continue

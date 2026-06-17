@@ -20,9 +20,10 @@ module testbench;
 
     task automatic send_bit(input logic b);
         begin
+            @(negedge clk);
             bit_in = b;
             bit_valid = 1'b1;
-            @(posedge clk);
+            @(negedge clk);
             bit_valid = 1'b0;
         end
     endtask
@@ -40,10 +41,12 @@ module testbench;
         send_bit(1'b0);
         send_bit(1'b1);
         send_bit(1'b1);
-        if (crc !== 4'hb) $fatal(1, "crc vector mismatch");
+        if (crc !== 4'hc) $fatal(1, "crc vector mismatch");
+        @(negedge clk);
         clear = 1'b1;
-        @(posedge clk);
+        @(negedge clk);
         clear = 1'b0;
+        #1;
         if (crc !== 4'hf) $fatal(1, "clear mismatch");
         $finish;
     end

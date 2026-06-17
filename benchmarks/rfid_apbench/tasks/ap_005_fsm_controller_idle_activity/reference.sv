@@ -30,8 +30,20 @@ module ap_005_fsm_controller_idle_activity (
     always_comb begin
         next_state = state;
         unique case (state)
-            ST_IDLE: next_state = (field_on && frame_valid) ? ST_DECODE : ST_IDLE;
-            ST_DECODE: next_state = crc_ok ? ST_RESPOND : ST_ERROR;
+            ST_IDLE: begin
+                if (field_on && frame_valid) begin
+                    next_state = ST_DECODE;
+                end else begin
+                    next_state = ST_IDLE;
+                end
+            end
+            ST_DECODE: begin
+                if (crc_ok) begin
+                    next_state = ST_RESPOND;
+                end else begin
+                    next_state = ST_ERROR;
+                end
+            end
             ST_RESPOND: next_state = ST_IDLE;
             ST_ERROR: next_state = ST_IDLE;
             default: next_state = ST_IDLE;

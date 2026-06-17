@@ -1,0 +1,91 @@
+name: RFID-APBench Reference Validation
+
+on:
+  push:
+    paths:
+      - "benchmarks/rfid_apbench/**"
+      - "scripts/validate_rfid_apbench_references.py"
+      - "src/rtlbench/**"
+      - "tests/**"
+      - ".github/workflows/rfid-apbench-reference-validation.yml"
+      - "pyproject.toml"
+  pull_request:
+    paths:
+      - "benchmarks/rfid_apbench/**"
+      - "scripts/validate_rfid_apbench_references.py"
+      - "src/rtlbench/**"
+      - "tests/**"
+      - ".github/workflows/rfid-apbench-reference-validation.yml"
+      - "pyproject.toml"
+  workflow_dispatch:
+
+jobs:
+  reference-validation:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Install open-source EDA tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends iverilog yosys
+          iverilog -V
+          vvp -V
+          yosys -V
+
+      - name: Run unit tests
+        run: python -m pytest
+
+      - name: Validate RFID-APBench references
+        run: |
+          python scripts/validate_rfid_apbench_references.py \
+            --benchmark-root benchmarks/rfid_apbench \
+            --work-dir .tmp/rfid_apbench_reference_validation \
+            --output-md reports/v0.5_rfid_apbench_reference_validation.md \
+            --output-csv reports/v0.5_rfid_apbench_reference_validation.csv \
+            --write-reference-metrics
+
+      - name: Require tool-enabled reference success
+        run: |
+          python - <<'PY'
+          import csv
+          from pathlib import Path
+
+          rows = list(csv.DictReader(Path("reports/v0.5_rfid_apbench_reference_validation.csv").open()))
+          assert len(rows) == 5, f"expected 5 tasks, got {len(rows)}"
+          required = [
+              "compile_status",
+              "simulation_status",
+              "activity_status",
+              "synthesis_status",
+              "area_status",
+          ]
+          for row in rows:
+              for field in required:
+                  assert row[field] == "pass", f"{row['task_id']} {field}={row[field]}"
+              assert row["failure_category"] == "passed", (
+                  f"{row['task_id']} failure_category={row['failure_category']}"
+              )
+          PY
+
+      - name: Upload sanitized validation reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: rfid-apbench-reference-validation-reports
+          path: |
+            reports/v0.5_rfid_apbench_reference_validation.md
+            reports/v0.5_rfid_apbench_reference_validation.csv
+            benchmarks/rfid_apbench/tasks/*/expected/reference_metrics.yaml
+          if-no-files-found: error

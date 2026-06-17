@@ -58,6 +58,30 @@ def test_vcd_signal_exclusion() -> None:
     assert result.excluded_signals == ("clk",)
 
 
+def test_vcd_alias_identifiers_are_counted_once() -> None:
+    vcd = """
+$timescale 1ns $end
+$scope module top $end
+$var wire 1 ! ready $end
+$scope module child $end
+$var wire 1 ! ready $end
+$upscope $end
+$upscope $end
+$enddefinitions $end
+#0
+0!
+#1
+1!
+#2
+0!
+"""
+
+    result = count_vcd_toggles(vcd)
+
+    assert result.total_toggles == 2
+    assert result.signal_toggles == {"ready": 2}
+
+
 def test_vcd_time_window_counts_only_inside_window() -> None:
     result = count_vcd_toggles(TINY_VCD, exclude_signals={"clk"}, start_time=11, end_time=20)
 

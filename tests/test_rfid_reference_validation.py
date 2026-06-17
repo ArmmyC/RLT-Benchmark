@@ -61,6 +61,19 @@ Number of cells: 17
     assert validation.parse_yosys_generic_cell_count(stdout) == 17
 
 
+def test_yosys_cell_count_parser_accepts_stat_cell_summary() -> None:
+    stdout = """
+=== ap_001_idle_counter ===
+
+       19 wires
+       54 wire bits
+       15 cells
+        1   $add
+"""
+
+    assert validation.parse_yosys_generic_cell_count(stdout) == 15
+
+
 def test_unavailable_tools_produce_graceful_rows(tmp_path: Path) -> None:
     benchmark_root = Path(__file__).resolve().parents[1] / "benchmarks" / "rfid_apbench"
     tools = validation.ToolAvailability(iverilog=None, vvp=None, yosys=None)

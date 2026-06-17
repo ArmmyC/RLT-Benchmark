@@ -1,0 +1,12 @@
+schema_version: rfid_apbench_reference_metrics/v0.1
+task_id: ap_003_register_bank_unnecessary_writes
+toolchain_id: iverilog-vcd-yosys-generic
+area:
+  value: 15.0
+  unit: generic_cells
+activity:
+  value: 23
+  metric: total_signal_toggles
+timing:
+  required: false
+  status: not_required
