@@ -5,6 +5,8 @@ import json
 import sys
 from pathlib import Path
 
+import pytest
+
 
 SCRIPT_PATH = Path(__file__).resolve().parents[1] / "scripts" / "run_rfid_apbench_3sample_baseline.py"
 SPEC = importlib.util.spec_from_file_location("run_rfid_apbench_3sample_baseline", SCRIPT_PATH)
@@ -62,6 +64,13 @@ def row(**overrides):
     }
     values.update(overrides)
     return baseline.BaselineRow(**values)
+
+
+def test_runner_loads_current_ten_task_benchmark() -> None:
+    loaded = baseline.load_tasks(BENCHMARK_ROOT)
+
+    assert len(loaded) == 10
+    assert [task.task_id for task in loaded] == [task.task_id for task in tasks()]
 
 
 def test_blocker_rows_cover_ten_tasks_and_three_samples() -> None:
@@ -279,6 +288,17 @@ def test_models_preflight_is_not_required_by_default(monkeypatch) -> None:
     assert args.require_models_preflight is False
 
 
+def test_main_rejects_samples_per_task_other_than_three(monkeypatch) -> None:
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["run_rfid_apbench_3sample_baseline.py", "--samples-per-task", "2"],
+    )
+
+    with pytest.raises(ValueError, match="exactly 3 samples per task"):
+        baseline.main()
+
+
 def test_report_writers_emit_sanitized_baseline(tmp_path: Path) -> None:
     config = baseline.EndpointConfig(
         base_url="http://127.0.0.1:8000/v1",
@@ -287,8 +307,9 @@ def test_report_writers_emit_sanitized_baseline(tmp_path: Path) -> None:
         timeout_seconds=1.0,
     )
     rows = [
-        row(sample_id=1),
-        row(sample_id=2, extraction_status="passed", score_status="valid", score=1.0, failure_category="passed"),
+        row(task_id=task.task_id, sample_id=sample_id)
+        for sample_id in range(1, 4)
+        for task in tasks()
     ]
     output_md = tmp_path / "baseline.md"
     output_csv = tmp_path / "baseline.csv"
@@ -308,5 +329,9 @@ def test_report_writers_emit_sanitized_baseline(tmp_path: Path) -> None:
     csv_text = output_csv.read_text(encoding="utf-8")
     json_rows = [json.loads(line) for line in output_jsonl.read_text(encoding="utf-8").splitlines()]
     assert "Mean all-sample score" in markdown
+    assert "- Task count: 10" in markdown
+    assert "- Samples per task: 3" in markdown
+    assert "- Total sample count: 30" in markdown
     assert "raw_model_response" not in csv_text
     assert json_rows[0]["benchmark"] == "rfid_apbench"
+    assert len(json_rows) == 30

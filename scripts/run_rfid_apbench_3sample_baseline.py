@@ -41,7 +41,6 @@ from rtlbench.client import OpenAICompatibleClient  # noqa: E402
 from rtlbench.extraction import extract_all_rtl_modules  # noqa: E402
 
 
-EXPECTED_TASKS = 5
 SAMPLES_PER_TASK = 3
 REPORT_FIELDS = [
     "benchmark",
@@ -136,10 +135,7 @@ class BaselineRow:
 
 
 def load_tasks(benchmark_root: Path) -> list[RFIDAPBenchTaskInfo]:
-    tasks = list(RFIDAPBenchAdapter(benchmark_root).load_task_infos())
-    if len(tasks) != EXPECTED_TASKS:
-        raise ValueError(f"v0.6 RFID-APBench baseline expects {EXPECTED_TASKS} tasks, found {len(tasks)}")
-    return tasks
+    return list(RFIDAPBenchAdapter(benchmark_root).load_task_infos())
 
 
 def tools_available(tools: ToolAvailability) -> bool:
@@ -483,7 +479,7 @@ def write_markdown_report(
         "",
         "## Scope",
         "",
-        "This report runs a bounded 3-sample model baseline on the existing five public/synthetic RFID-APBench tasks using unchanged v0.5 benchmark assets.",
+        "This report runs a bounded 3-sample model baseline on the public/synthetic RFID-APBench tasks loaded from the current benchmark manifest.",
         "",
         "- Benchmark: `rfid_apbench`",
         f"- Task count: {len(task_ids)}",
