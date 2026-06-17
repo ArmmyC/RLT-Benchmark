@@ -3,8 +3,6 @@ from __future__ import annotations
 import argparse
 import csv
 import json
-import shutil
-import subprocess
 import sys
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -31,6 +29,12 @@ from rtlbench.area_activity_scoring import (  # noqa: E402
     validate_sanitized_record,
 )
 from rtlbench.vcd_activity import VCDActivityError, count_vcd_file  # noqa: E402
+from rtlbench.tool_health import (  # noqa: E402
+    ToolAvailability,
+    ToolCommandResult,
+    detect_tools,
+    run_tool_command,
+)
 
 
 REPORT_FIELDS = [
@@ -57,21 +61,6 @@ REPORT_FIELDS = [
     "workload_id",
     "notes",
 ]
-
-
-@dataclass(frozen=True)
-class ToolAvailability:
-    iverilog: str | None
-    vvp: str | None
-    yosys: str | None
-
-    @property
-    def has_icarus(self) -> bool:
-        return self.iverilog is not None and self.vvp is not None
-
-    @property
-    def has_yosys(self) -> bool:
-        return self.yosys is not None
 
 
 @dataclass(frozen=True)
@@ -119,14 +108,6 @@ class CandidateEvaluationRow:
     def csv_dict(self) -> dict[str, str]:
         data = self.sanitized_dict()
         return {key: "" if data[key] is None else str(data[key]) for key in REPORT_FIELDS}
-
-
-def detect_tools() -> ToolAvailability:
-    return ToolAvailability(
-        iverilog=shutil.which("iverilog"),
-        vvp=shutil.which("vvp"),
-        yosys=shutil.which("yosys"),
-    )
 
 
 def candidate_path_for_task(candidate_root: Path, task_id: str) -> Path:
@@ -228,7 +209,18 @@ def evaluate_task_candidate(
     failure_category = "passed"
     notes: list[str] = []
 
-    if tools.has_icarus:
+    if not tools.has_icarus:
+        failure_category = "tool_unavailable"
+        missing = []
+        if tools.iverilog is None:
+            missing.append("iverilog")
+        if tools.vvp is None:
+            missing.append("vvp")
+        notes.append(f"Icarus unavailable: {', '.join(missing)}")
+    elif not tools.healthy_icarus:
+        failure_category = "tool_health_failed"
+        notes.append("compile or simulation tool failed health check")
+    else:
         sim_exe = task_work_dir / "candidate_sim"
         compile_result = _run_command(
             [
@@ -241,10 +233,18 @@ def evaluate_task_candidate(
             ],
             cwd=task_work_dir,
         )
-        compile_pass = compile_result.returncode == 0
+        if compile_result.startup_failed:
+            failure_category = "tool_startup_failure"
+            notes.append("compile tool failed to start")
+        else:
+            compile_pass = compile_result.returncode == 0
         if compile_pass:
             sim_result = _run_command([tools.vvp or "vvp", str(sim_exe)], cwd=task_work_dir)
-            correctness_pass = sim_result.returncode == 0
+            if sim_result.startup_failed:
+                failure_category = "tool_startup_failure"
+                notes.append("simulation tool failed to start")
+            else:
+                correctness_pass = sim_result.returncode == 0
             if correctness_pass:
                 vcd_path = task_work_dir / "activity.vcd"
                 if vcd_path.is_file():
@@ -265,22 +265,22 @@ def evaluate_task_candidate(
                 else:
                     failure_category = "activity_unavailable"
                     notes.append("candidate simulation did not produce activity VCD")
-            else:
+            elif not sim_result.startup_failed:
                 failure_category = "simulation_failure"
                 notes.append("candidate simulation failed")
-        else:
+        elif not compile_result.startup_failed:
             failure_category = "compile_failure"
             notes.append("candidate compile failed")
-    else:
-        failure_category = "tool_unavailable"
-        missing = []
-        if tools.iverilog is None:
-            missing.append("iverilog")
-        if tools.vvp is None:
-            missing.append("vvp")
-        notes.append(f"Icarus unavailable: {', '.join(missing)}")
 
-    if tools.has_yosys:
+    if not tools.has_yosys:
+        if failure_category == "passed":
+            failure_category = "tool_unavailable"
+        notes.append("Yosys unavailable")
+    elif not tools.healthy_yosys:
+        if failure_category == "passed":
+            failure_category = "tool_health_failed"
+        notes.append("synthesis tool failed health check")
+    else:
         synth_result = _run_command(
             [
                 tools.yosys or "yosys",
@@ -293,7 +293,12 @@ def evaluate_task_candidate(
             ],
             cwd=task_work_dir,
         )
-        synth_pass = synth_result.returncode == 0
+        if synth_result.startup_failed:
+            if failure_category == "passed":
+                failure_category = "tool_startup_failure"
+            notes.append("synthesis tool failed to start")
+        else:
+            synth_pass = synth_result.returncode == 0
         if synth_pass:
             generated_cells = parse_yosys_generic_cell_count(synth_result.stdout)
             if generated_cells is not None:
@@ -302,14 +307,10 @@ def evaluate_task_candidate(
                 if failure_category == "passed":
                     failure_category = "area_metric_unavailable"
                 notes.append("Yosys did not report candidate generic cell count")
-        else:
+        elif not synth_result.startup_failed:
             if failure_category == "passed":
                 failure_category = "synthesis_failure"
             notes.append("candidate synthesis failed")
-    else:
-        if failure_category == "passed":
-            failure_category = "tool_unavailable"
-        notes.append("Yosys unavailable")
 
     if failure_category == "passed":
         if generated_activity is None:
@@ -386,9 +387,9 @@ def write_markdown_report(
         "",
         "## Tool Availability",
         "",
-        f"- Icarus Verilog compile: {_tool_status(tools.iverilog)}",
-        f"- Icarus runtime vvp: {_tool_status(tools.vvp)}",
-        f"- Yosys synthesis: {_tool_status(tools.yosys)}",
+        f"- Icarus Verilog compile: {_tool_status(tools.iverilog, tools.iverilog_healthy)}",
+        f"- Icarus runtime vvp: {_tool_status(tools.vvp, tools.vvp_healthy)}",
+        f"- Yosys synthesis: {_tool_status(tools.yosys, tools.yosys_healthy)}",
         "",
         "## Candidate Fixture Source",
         "",
@@ -565,20 +566,14 @@ def _aggregate_row_value(row: CandidateEvaluationRow) -> float:
     return row.score
 
 
-def _run_command(command: list[str], cwd: Path) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(
-        command,
-        cwd=cwd,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        timeout=30,
-        check=False,
-    )
+def _run_command(command: list[str], cwd: Path) -> ToolCommandResult:
+    return run_tool_command(command, cwd=cwd)
 
 
-def _tool_status(path: str | None) -> str:
-    return "available" if path else "unavailable"
+def _tool_status(path: str | None, healthy: bool) -> str:
+    if path is None:
+        return "unavailable"
+    return "healthy" if healthy else "health_failed"
 
 
 def _safe_note(value: str) -> str:

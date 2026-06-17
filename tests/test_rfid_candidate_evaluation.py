@@ -17,6 +17,7 @@ sys.modules[SPEC.name] = candidate_eval
 SPEC.loader.exec_module(candidate_eval)
 
 from rtlbench.adapters.rfid_apbench import RFIDAPBenchAdapter  # noqa: E402
+from rtlbench import tool_health  # noqa: E402
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -89,6 +90,155 @@ def test_missing_candidate_produces_invalid_row(tmp_path: Path) -> None:
     assert result.score_status == "invalid"
     assert result.score is None
     assert result.failure_category == "candidate_missing"
+
+
+def test_missing_tools_are_unavailable(tmp_path: Path) -> None:
+    task = first_task()
+    result = candidate_eval.evaluate_task_candidate(
+        task=task,
+        candidate_path=CANDIDATE_ROOT / f"{task.task_id}.sv",
+        candidate_id="reference_copy",
+        task_work_dir=tmp_path / "work",
+        tools=candidate_eval.ToolAvailability(iverilog=None, vvp=None, yosys=None),
+    )
+
+    assert result.failure_category == "tool_unavailable"
+    assert "unavailable" in result.notes
+    result.sanitized_dict()
+
+
+def test_detect_tools_probes_discovered_paths(monkeypatch) -> None:
+    paths = {"iverilog": "iverilog-bin", "vvp": "vvp-bin", "yosys": "yosys-bin"}
+    monkeypatch.setattr(tool_health.shutil, "which", paths.get)
+
+    def probe(command, **_kwargs):
+        healthy = command[0] != "vvp-bin"
+        return tool_health.ToolCommandResult(
+            returncode=0 if healthy else None,
+            stdout="",
+            stderr="",
+            startup_failed=not healthy,
+        )
+
+    monkeypatch.setattr(tool_health, "run_tool_command", probe)
+
+    tools = tool_health.detect_tools()
+
+    assert tools.iverilog_healthy is True
+    assert tools.vvp_healthy is False
+    assert tools.yosys_healthy is True
+    assert tools.has_icarus is True
+    assert tools.healthy_icarus is False
+
+
+def test_unhealthy_tools_do_not_become_compile_failures(monkeypatch, tmp_path: Path) -> None:
+    task = first_task()
+    monkeypatch.setattr(
+        candidate_eval,
+        "_run_command",
+        lambda *_args, **_kwargs: pytest.fail("unhealthy tools must not execute candidates"),
+    )
+    tools = candidate_eval.ToolAvailability(
+        iverilog="iverilog",
+        vvp="vvp",
+        yosys="yosys",
+        iverilog_healthy=False,
+        vvp_healthy=True,
+        yosys_healthy=False,
+    )
+
+    result = candidate_eval.evaluate_task_candidate(
+        task=task,
+        candidate_path=CANDIDATE_ROOT / f"{task.task_id}.sv",
+        candidate_id="reference_copy",
+        task_work_dir=tmp_path / "work",
+        tools=tools,
+    )
+
+    assert result.failure_category == "tool_health_failed"
+    assert result.compile_pass is False
+    assert result.synth_pass is False
+    assert "failed health check" in result.notes
+    result.sanitized_dict()
+
+
+def test_tool_startup_failure_is_not_candidate_failure(monkeypatch, tmp_path: Path) -> None:
+    task = first_task()
+    startup_failure = candidate_eval.ToolCommandResult(
+        returncode=None,
+        stdout="",
+        stderr="",
+        startup_failed=True,
+    )
+    monkeypatch.setattr(candidate_eval, "_run_command", lambda *_args, **_kwargs: startup_failure)
+
+    result = candidate_eval.evaluate_task_candidate(
+        task=task,
+        candidate_path=CANDIDATE_ROOT / f"{task.task_id}.sv",
+        candidate_id="reference_copy",
+        task_work_dir=tmp_path / "work",
+        tools=candidate_eval.ToolAvailability(iverilog="iverilog", vvp="vvp", yosys="yosys"),
+    )
+
+    assert result.failure_category == "tool_startup_failure"
+    assert "failed to start" in result.notes
+    assert "stderr" not in result.notes
+    result.sanitized_dict()
+
+
+def test_normal_candidate_rejection_is_compile_failure(monkeypatch, tmp_path: Path) -> None:
+    task = first_task()
+    failure = candidate_eval.ToolCommandResult(returncode=1, stdout="", stderr="syntax details")
+    monkeypatch.setattr(candidate_eval, "_run_command", lambda *_args, **_kwargs: failure)
+
+    result = candidate_eval.evaluate_task_candidate(
+        task=task,
+        candidate_path=CANDIDATE_ROOT / f"{task.task_id}.sv",
+        candidate_id="reference_copy",
+        task_work_dir=tmp_path / "work",
+        tools=candidate_eval.ToolAvailability(iverilog="iverilog", vvp="vvp", yosys="yosys"),
+    )
+
+    assert result.failure_category == "compile_failure"
+    assert result.notes == "candidate compile failed; candidate synthesis failed"
+    assert "syntax details" not in result.notes
+
+
+def test_normal_synthesis_rejection_is_synthesis_failure(monkeypatch, tmp_path: Path) -> None:
+    task = first_task()
+    calls = 0
+
+    def run_command(_command, cwd):
+        nonlocal calls
+        calls += 1
+        if calls == 2:
+            (cwd / "activity.vcd").write_text("placeholder", encoding="utf-8")
+        return candidate_eval.ToolCommandResult(
+            returncode=1 if calls == 3 else 0,
+            stdout="",
+            stderr="synthesis details" if calls == 3 else "",
+        )
+
+    class ToggleResult:
+        total_toggles = 34
+
+    monkeypatch.setattr(candidate_eval, "_run_command", run_command)
+    monkeypatch.setattr(candidate_eval, "count_vcd_file", lambda *_args, **_kwargs: ToggleResult())
+
+    result = candidate_eval.evaluate_task_candidate(
+        task=task,
+        candidate_path=CANDIDATE_ROOT / f"{task.task_id}.sv",
+        candidate_id="reference_copy",
+        task_work_dir=tmp_path / "work",
+        tools=candidate_eval.ToolAvailability(iverilog="iverilog", vvp="vvp", yosys="yosys"),
+    )
+
+    assert result.compile_pass is True
+    assert result.correctness_pass is True
+    assert result.synth_pass is False
+    assert result.failure_category == "synthesis_failure"
+    assert result.notes == "candidate synthesis failed"
+    assert "synthesis details" not in result.notes
 
 
 def test_score_row_uses_area_activity_scoring() -> None:

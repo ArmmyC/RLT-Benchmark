@@ -89,6 +89,30 @@ def test_unavailable_tools_produce_graceful_rows(tmp_path: Path) -> None:
     assert all(item.failure_category == "tool_unavailable" for item in rows)
 
 
+def test_unhealthy_tools_produce_health_failure_rows(monkeypatch, tmp_path: Path) -> None:
+    benchmark_root = Path(__file__).resolve().parents[1] / "benchmarks" / "rfid_apbench"
+    tools = validation.ToolAvailability(
+        iverilog="iverilog",
+        vvp="vvp",
+        yosys="yosys",
+        iverilog_healthy=False,
+        yosys_healthy=False,
+    )
+    monkeypatch.setattr(
+        validation,
+        "_run_command",
+        lambda *_args, **_kwargs: pytest.fail("unhealthy tools must not validate references"),
+    )
+
+    rows = validation.validate_references(benchmark_root, tmp_path, tools)
+
+    assert len(rows) == 5
+    assert all(item.compile_status == "unavailable" for item in rows)
+    assert all(item.synthesis_status == "unavailable" for item in rows)
+    assert all(item.failure_category == "tool_health_failed" for item in rows)
+    assert all("failed health check" in item.notes for item in rows)
+
+
 def test_markdown_and_csv_reports_are_sanitized(tmp_path: Path) -> None:
     rows = [row(), row(task_id="ap_002_command_decoder", failure_category="area_unavailable", reference_area=None, area_unit=None)]
     tools = validation.ToolAvailability(iverilog=None, vvp=None, yosys=None)

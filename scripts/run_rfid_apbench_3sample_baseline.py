@@ -143,7 +143,7 @@ def load_tasks(benchmark_root: Path) -> list[RFIDAPBenchTaskInfo]:
 
 
 def tools_available(tools: ToolAvailability) -> bool:
-    return tools.has_icarus and tools.has_yosys
+    return tools.healthy_icarus and tools.healthy_yosys
 
 
 def missing_tool_labels(tools: ToolAvailability) -> tuple[str, ...]:
@@ -178,10 +178,13 @@ def make_blocker_rows(
         failure_category = "endpoint_unavailable"
         missing = ", ".join(endpoint.missing_labels) or "endpoint"
         notes = f"3-sample baseline blocked because missing {missing}"
-    else:
+    elif missing_tool_labels(tools):
         failure_category = "tool_unavailable"
         missing = ", ".join(missing_tool_labels(tools)) or "EDA tool"
         notes = f"3-sample baseline blocked because missing {missing}"
+    else:
+        failure_category = "tool_health_failed"
+        notes = "3-sample baseline blocked because an EDA tool failed its health check"
     rows: list[BaselineRow] = []
     for sample_id in range(1, samples + 1):
         for task in tasks:
@@ -501,9 +504,9 @@ def write_markdown_report(
         f"- Endpoint status: `{effective_endpoint_status}`",
         f"- Endpoint: `{endpoint.sanitized_endpoint}`",
         f"- Missing endpoint configuration: `{', '.join(endpoint.missing_labels) if endpoint.missing_labels else 'none'}`",
-        f"- Icarus Verilog compile: `{_tool_status(tools.iverilog)}`",
-        f"- Icarus runtime vvp: `{_tool_status(tools.vvp)}`",
-        f"- Yosys synthesis: `{_tool_status(tools.yosys)}`",
+        f"- Icarus Verilog compile: `{_tool_status(tools.iverilog, tools.iverilog_healthy)}`",
+        f"- Icarus runtime vvp: `{_tool_status(tools.vvp, tools.vvp_healthy)}`",
+        f"- Yosys synthesis: `{_tool_status(tools.yosys, tools.yosys_healthy)}`",
         "",
         "## Aggregate Gate Counts",
         "",
@@ -739,8 +742,10 @@ def main() -> int:
     return 0
 
 
-def _tool_status(path: str | None) -> str:
-    return "available" if path else "unavailable"
+def _tool_status(path: str | None, healthy: bool) -> str:
+    if path is None:
+        return "unavailable"
+    return "healthy" if healthy else "health_failed"
 
 
 if __name__ == "__main__":

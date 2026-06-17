@@ -113,6 +113,36 @@ def test_missing_tools_create_tool_blocker_rows() -> None:
     assert {item.endpoint_status for item in rows} == {"available"}
 
 
+def test_unhealthy_tools_create_health_blocker_rows() -> None:
+    config = baseline.EndpointConfig(
+        base_url="http://127.0.0.1:8000/v1",
+        credential="local-vllm-no-auth",
+        model="qwen36-27b",
+        timeout_seconds=1.0,
+    )
+    tools = baseline.ToolAvailability(
+        iverilog="iverilog",
+        vvp="vvp",
+        yosys="yosys",
+        iverilog_healthy=False,
+    )
+    rows = baseline.make_blocker_rows(
+        tasks=tasks(),
+        endpoint=config,
+        tools=tools,
+        samples=3,
+        prompt_profile="neutral_baseline",
+        temperature=0.0,
+        top_p=1.0,
+        max_tokens=4096,
+    )
+
+    assert baseline.tools_available(tools) is False
+    assert len(rows) == 15
+    assert {item.failure_category for item in rows} == {"tool_health_failed"}
+    assert all("health check" in item.notes for item in rows)
+
+
 def test_aggregate_score_value_zero_fills_invalid_rows() -> None:
     assert baseline.aggregate_score_value(row()) == 0.0
     assert baseline.aggregate_score_value(row(score_status="valid", score=1.25)) == 1.25

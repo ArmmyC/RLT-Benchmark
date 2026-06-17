@@ -3,8 +3,6 @@ from __future__ import annotations
 import argparse
 import csv
 import re
-import shutil
-import subprocess
 import sys
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -20,6 +18,12 @@ if str(SRC_ROOT) not in sys.path:
 
 from rtlbench.adapters.rfid_apbench import RFIDAPBenchAdapter, RFIDAPBenchTaskInfo  # noqa: E402
 from rtlbench.vcd_activity import VCDActivityError, count_vcd_file  # noqa: E402
+from rtlbench.tool_health import (  # noqa: E402
+    ToolAvailability,
+    ToolCommandResult,
+    detect_tools,
+    run_tool_command,
+)
 
 
 REPORT_FIELDS = [
@@ -37,21 +41,6 @@ REPORT_FIELDS = [
     "failure_category",
     "notes",
 ]
-
-
-@dataclass(frozen=True)
-class ToolAvailability:
-    iverilog: str | None
-    vvp: str | None
-    yosys: str | None
-
-    @property
-    def has_icarus(self) -> bool:
-        return self.iverilog is not None and self.vvp is not None
-
-    @property
-    def has_yosys(self) -> bool:
-        return self.yosys is not None
 
 
 @dataclass
@@ -78,14 +67,6 @@ class ReferenceValidationRow:
             sanitized[key] = "" if value is None else str(value)
         _reject_unsanitized_payload(sanitized)
         return sanitized
-
-
-def detect_tools() -> ToolAvailability:
-    return ToolAvailability(
-        iverilog=shutil.which("iverilog"),
-        vvp=shutil.which("vvp"),
-        yosys=shutil.which("yosys"),
-    )
 
 
 def validate_references(
@@ -120,7 +101,18 @@ def validate_task_reference(
     notes: list[str] = []
     failure_category = "passed"
 
-    if tools.has_icarus:
+    if not tools.has_icarus:
+        failure_category = "tool_unavailable"
+        missing = []
+        if tools.iverilog is None:
+            missing.append("iverilog")
+        if tools.vvp is None:
+            missing.append("vvp")
+        notes.append(f"Icarus unavailable: {', '.join(missing)}")
+    elif not tools.healthy_icarus:
+        failure_category = "tool_health_failed"
+        notes.append("compile or simulation tool failed health check")
+    else:
         sim_exe = task_work_dir / "reference_sim"
         compile_result = _run_command(
             [
@@ -133,10 +125,16 @@ def validate_task_reference(
             ],
             cwd=task_work_dir,
         )
-        if compile_result.returncode == 0:
+        if compile_result.startup_failed:
+            failure_category = "tool_startup_failure"
+            notes.append("compile tool failed to start")
+        elif compile_result.returncode == 0:
             compile_status = "pass"
             sim_result = _run_command([tools.vvp or "vvp", str(sim_exe)], cwd=task_work_dir)
-            if sim_result.returncode == 0:
+            if sim_result.startup_failed:
+                failure_category = "tool_startup_failure"
+                notes.append("simulation tool failed to start")
+            elif sim_result.returncode == 0:
                 simulation_status = "pass"
                 vcd_path = task_work_dir / "activity.vcd"
                 if vcd_path.is_file():
@@ -171,16 +169,15 @@ def validate_task_reference(
             activity_status = "unavailable"
             failure_category = "compile_failure"
             notes.append("reference compile failed")
+    if not tools.has_yosys:
+        if failure_category == "passed":
+            failure_category = "tool_unavailable"
+        notes.append("Yosys unavailable")
+    elif not tools.healthy_yosys:
+        if failure_category == "passed":
+            failure_category = "tool_health_failed"
+        notes.append("synthesis tool failed health check")
     else:
-        failure_category = "tool_unavailable"
-        missing = []
-        if tools.iverilog is None:
-            missing.append("iverilog")
-        if tools.vvp is None:
-            missing.append("vvp")
-        notes.append(f"Icarus unavailable: {', '.join(missing)}")
-
-    if tools.has_yosys:
         synth_result = _run_command(
             [
                 tools.yosys or "yosys",
@@ -193,7 +190,11 @@ def validate_task_reference(
             ],
             cwd=task_work_dir,
         )
-        if synth_result.returncode == 0:
+        if synth_result.startup_failed:
+            if failure_category == "passed":
+                failure_category = "tool_startup_failure"
+            notes.append("synthesis tool failed to start")
+        elif synth_result.returncode == 0:
             synthesis_status = "pass"
             cell_count = parse_yosys_generic_cell_count(synth_result.stdout)
             if cell_count is not None:
@@ -211,10 +212,6 @@ def validate_task_reference(
             if failure_category == "passed":
                 failure_category = "synthesis_failure"
             notes.append("reference synthesis failed")
-    else:
-        if failure_category == "passed":
-            failure_category = "tool_unavailable"
-        notes.append("Yosys unavailable")
 
     if failure_category == "passed":
         if activity_status != "pass":
@@ -286,9 +283,9 @@ def write_markdown_report(
         "",
         "## Tool Availability",
         "",
-        f"- Icarus Verilog compile: {_tool_status(tools.iverilog)}",
-        f"- Icarus runtime vvp: {_tool_status(tools.vvp)}",
-        f"- Yosys synthesis: {_tool_status(tools.yosys)}",
+        f"- Icarus Verilog compile: {_tool_status(tools.iverilog, tools.iverilog_healthy)}",
+        f"- Icarus runtime vvp: {_tool_status(tools.vvp, tools.vvp_healthy)}",
+        f"- Yosys synthesis: {_tool_status(tools.yosys, tools.yosys_healthy)}",
         "",
         "## Aggregate Pass Counts",
         "",
@@ -363,20 +360,14 @@ def write_reference_metrics_if_complete(rows: list[ReferenceValidationRow], benc
         metrics_path.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
 
 
-def _run_command(command: list[str], cwd: Path) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(
-        command,
-        cwd=cwd,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        timeout=30,
-        check=False,
-    )
+def _run_command(command: list[str], cwd: Path) -> ToolCommandResult:
+    return run_tool_command(command, cwd=cwd)
 
 
-def _tool_status(path: str | None) -> str:
-    return "available" if path else "unavailable"
+def _tool_status(path: str | None, healthy: bool) -> str:
+    if path is None:
+        return "unavailable"
+    return "healthy" if healthy else "health_failed"
 
 
 def _count_status(rows: list[ReferenceValidationRow], field: str, status: str) -> int:
