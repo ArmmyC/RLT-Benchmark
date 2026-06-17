@@ -222,7 +222,7 @@ def generate_candidates(
                     extraction_status="not_run",
                     candidate_file_available=False,
                     latency_seconds=None,
-                    notes=f"generation request failed: {_safe_note(str(exc))}",
+                    notes=_safe_report_note(f"generation request failed: {exc}"),
                 )
                 continue
 
@@ -324,9 +324,9 @@ def merge_rows(
         if candidate is None:
             rows.append(_missing_evaluation_row(task, endpoint, prompt_profile, generation))
             continue
-        notes = generation.notes
+        notes = _safe_report_note(generation.notes)
         if candidate.notes and candidate.notes != "candidate validated":
-            notes = f"{notes}; {candidate.notes}"
+            notes = _safe_report_note(f"{notes}; {candidate.notes}")
         rows.append(
             ModelSmokeRow(
                 benchmark="rfid_apbench",
@@ -584,7 +584,7 @@ def _missing_evaluation_row(
         failure_category="evaluation_unavailable",
         toolchain_id="unavailable",
         workload_id=str(task.activity_workload.get("workload_id", "unknown_workload")),
-        notes=generation.notes,
+        notes=_safe_report_note(generation.notes),
     )
 
 
@@ -609,6 +609,25 @@ def _safe_note(value: str) -> str:
     for marker in ("sk-", "Bearer "):
         if marker in safe:
             safe = safe.replace(marker, "[redacted]-")
+    return safe[:160]
+
+
+def _safe_report_note(value: str) -> str:
+    safe = _safe_note(value)
+    replacements = {
+        "raw_response": "response",
+        "raw_responses": "responses",
+        "raw_prompt": "prompt_input",
+        "outputs/": "artifact_dir/",
+        "raw model response": "model response",
+        "module ": "rtl_unit ",
+        "endmodule": "rtl_unit_end",
+    }
+    lowered = safe.lower()
+    for marker, replacement in replacements.items():
+        if marker in lowered:
+            safe = re.sub(re.escape(marker), replacement, safe, flags=re.IGNORECASE)
+            lowered = safe.lower()
     return safe[:160]
 
 

@@ -84,3 +84,27 @@ def test_report_writers_emit_sanitized_blocker(tmp_path: Path) -> None:
     assert "generated RTL" in markdown
     assert "endpoint_unavailable" in csv_text
     assert json_rows[0]["benchmark"] == "rfid_apbench"
+
+
+def test_missing_evaluation_row_sanitizes_generation_notes() -> None:
+    config = model_smoke.EndpointConfig(
+        base_url="http://127.0.0.1:8000/v1",
+        credential="local-vllm-no-auth",
+        model="qwen36-27b",
+        timeout_seconds=1.0,
+    )
+    task = tasks()[0]
+    generation = model_smoke.GenerationRecord(
+        task_id=task.task_id,
+        generation_status="request_failed",
+        extraction_status="not_run",
+        candidate_file_available=False,
+        latency_seconds=None,
+        notes="raw_response saved under outputs/run; module candidate failed",
+    )
+
+    row = model_smoke._missing_evaluation_row(task, config, "neutral_baseline", generation)
+
+    sanitized = row.sanitized_dict()
+    assert "raw_response" not in sanitized["notes"]
+    assert "outputs/" not in sanitized["notes"]
