@@ -1,6 +1,6 @@
 schema_version: "rfid_apbench_manifest/v0.1"
 benchmark: rfid_apbench
-description: "Public/synthetic RFID/NFC-style area/activity benchmark MVP scaffold."
+description: "Public/synthetic RFID/NFC-style area/activity benchmark."
 scoring_mode: area_activity
 activity_definition: vcd_toggle_count_proxy
 public_synthetic: true
@@ -15,3 +15,13 @@ tasks:
     path: tasks/ap_004_crc_serial_parallel_tradeoff
   - task_id: ap_005_fsm_controller_idle_activity
     path: tasks/ap_005_fsm_controller_idle_activity
+  - task_id: ap_006_wakeup_edge_filter
+    path: tasks/ap_006_wakeup_edge_filter
+  - task_id: ap_007_command_frame_checker
+    path: tasks/ap_007_command_frame_checker
+  - task_id: ap_008_byte_lane_write_gate
+    path: tasks/ap_008_byte_lane_write_gate
+  - task_id: ap_009_serial_parity_accumulator
+    path: tasks/ap_009_serial_parity_accumulator
+  - task_id: ap_010_retry_timeout_fsm
+    path: tasks/ap_010_retry_timeout_fsm

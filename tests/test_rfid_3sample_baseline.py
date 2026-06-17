@@ -64,7 +64,7 @@ def row(**overrides):
     return baseline.BaselineRow(**values)
 
 
-def test_blocker_rows_cover_five_tasks_and_three_samples() -> None:
+def test_blocker_rows_cover_ten_tasks_and_three_samples() -> None:
     config = baseline.EndpointConfig(
         base_url=None,
         credential=None,
@@ -82,7 +82,7 @@ def test_blocker_rows_cover_five_tasks_and_three_samples() -> None:
         max_tokens=4096,
     )
 
-    assert len(rows) == 15
+    assert len(rows) == 30
     assert {item.task_id for item in rows} == {task.task_id for task in tasks()}
     assert {item.sample_id for item in rows} == {1, 2, 3}
     assert {item.failure_category for item in rows} == {"endpoint_unavailable"}
@@ -108,7 +108,7 @@ def test_missing_tools_create_tool_blocker_rows() -> None:
         max_tokens=4096,
     )
 
-    assert len(rows) == 15
+    assert len(rows) == 30
     assert {item.failure_category for item in rows} == {"tool_unavailable"}
     assert {item.endpoint_status for item in rows} == {"available"}
 
@@ -138,7 +138,7 @@ def test_unhealthy_tools_create_health_blocker_rows() -> None:
     )
 
     assert baseline.tools_available(tools) is False
-    assert len(rows) == 15
+    assert len(rows) == 30
     assert {item.failure_category for item in rows} == {"tool_health_failed"}
     assert all("health check" in item.notes for item in rows)
 

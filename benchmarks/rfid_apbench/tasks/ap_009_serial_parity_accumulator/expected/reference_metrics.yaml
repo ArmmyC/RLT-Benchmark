@@ -1,0 +1,12 @@
+schema_version: rfid_apbench_reference_metrics/v0.1
+task_id: ap_009_serial_parity_accumulator
+toolchain_id: iverilog-vcd-yosys-generic
+area:
+  value: 9.0
+  unit: generic_cells
+activity:
+  value: 28
+  metric: total_signal_toggles
+timing:
+  required: false
+  status: not_required

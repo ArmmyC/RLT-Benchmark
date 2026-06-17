@@ -47,7 +47,7 @@ def test_no_endpoint_rows_are_sanitized() -> None:
     )
     rows = model_smoke.make_no_endpoint_rows(tasks(), config, "neutral_baseline")
 
-    assert len(rows) == 5
+    assert len(rows) == 10
     assert {row.failure_category for row in rows} == {"endpoint_unavailable"}
     assert all(row.score_status == "invalid" for row in rows)
     for row in rows:

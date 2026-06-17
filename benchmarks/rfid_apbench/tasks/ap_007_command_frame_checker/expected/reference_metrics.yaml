@@ -1,0 +1,12 @@
+schema_version: rfid_apbench_reference_metrics/v0.1
+task_id: ap_007_command_frame_checker
+toolchain_id: iverilog-vcd-yosys-generic
+area:
+  value: 11.0
+  unit: generic_cells
+activity:
+  value: 28
+  metric: total_signal_toggles
+timing:
+  required: false
+  status: not_required

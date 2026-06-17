@@ -17,7 +17,7 @@ def test_rfid_apbench_adapter_is_registered() -> None:
     assert ADAPTERS["rfid_apbench"] is RFIDAPBenchAdapter
 
 
-def test_rfid_apbench_loads_five_public_tasks() -> None:
+def test_rfid_apbench_loads_ten_public_tasks() -> None:
     tasks = list(RFIDAPBenchAdapter(BENCHMARK_ROOT).load_tasks())
 
     assert [task.task_id for task in tasks] == [
@@ -26,6 +26,11 @@ def test_rfid_apbench_loads_five_public_tasks() -> None:
         "ap_003_register_bank_unnecessary_writes",
         "ap_004_crc_serial_parallel_tradeoff",
         "ap_005_fsm_controller_idle_activity",
+        "ap_006_wakeup_edge_filter",
+        "ap_007_command_frame_checker",
+        "ap_008_byte_lane_write_gate",
+        "ap_009_serial_parity_accumulator",
+        "ap_010_retry_timeout_fsm",
     ]
     assert all(task.prompt.startswith("Implement the SystemVerilog module") for task in tasks)
     assert all(task.module_name == task.task_id for task in tasks)
@@ -33,6 +38,15 @@ def test_rfid_apbench_loads_five_public_tasks() -> None:
     assert all(Path(task.metadata["testbench_path"]).is_file() for task in tasks)
     assert all(task.metadata["activity_workload"]["activity_metric"] == "total_signal_toggles" for task in tasks)
     assert all(task.metadata["timing_required"] is False for task in tasks)
+    assert all(
+        (BENCHMARK_ROOT / "tasks" / task.task_id / "constraints.sdc").is_file()
+        for task in tasks[5:]
+    )
+    assert all(
+        (BENCHMARK_ROOT / "tasks" / task.task_id / "expected" / "reference_metrics.yaml").is_file()
+        for task in tasks
+    )
+    assert all((BENCHMARK_ROOT / "candidates" / "reference_copy" / f"{task.task_id}.sv").is_file() for task in tasks)
 
 
 def test_rfid_apbench_split_selects_task() -> None:

@@ -1,0 +1,14 @@
+schema_version: "rfid_apbench_activity/v0.1"
+workload_id: ap_007_command_frame_checker_default
+clock: null
+reset: null
+measurement_window:
+  start_time: 0
+  end_time: 100
+stimulus:
+  type: deterministic
+  description: "Invalid cycle, accepted boundary lengths, and rejected length, opcode, and checksum cases."
+vcd:
+  include_scope: testbench
+  exclude_signals: []
+activity_metric: total_signal_toggles

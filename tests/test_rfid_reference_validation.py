@@ -80,7 +80,7 @@ def test_unavailable_tools_produce_graceful_rows(tmp_path: Path) -> None:
 
     rows = validation.validate_references(benchmark_root, tmp_path, tools)
 
-    assert len(rows) == 5
+    assert len(rows) == 10
     assert all(item.compile_status == "unavailable" for item in rows)
     assert all(item.simulation_status == "unavailable" for item in rows)
     assert all(item.activity_status == "unavailable" for item in rows)
@@ -106,7 +106,7 @@ def test_unhealthy_tools_produce_health_failure_rows(monkeypatch, tmp_path: Path
 
     rows = validation.validate_references(benchmark_root, tmp_path, tools)
 
-    assert len(rows) == 5
+    assert len(rows) == 10
     assert all(item.compile_status == "unavailable" for item in rows)
     assert all(item.synthesis_status == "unavailable" for item in rows)
     assert all(item.failure_category == "tool_health_failed" for item in rows)

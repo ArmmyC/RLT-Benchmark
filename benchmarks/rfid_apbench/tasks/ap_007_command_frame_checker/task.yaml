@@ -1,0 +1,25 @@
+schema_version: "rfid_apbench_task/v0.1"
+task_id: ap_007_command_frame_checker
+title: "Command frame checker"
+domain: rfid_nfc_synthetic
+public_synthetic: true
+top_module: ap_007_command_frame_checker
+language: systemverilog
+interfaces:
+  clock: null
+  reset: null
+correctness:
+  method: simulation
+  testbench: testbench.sv
+synthesis:
+  flow_id: yosys_generic
+  top_module: ap_007_command_frame_checker
+timing:
+  required: false
+  constraint_file: constraints.sdc
+activity:
+  workload: activity_workload.yaml
+  metric: total_signal_toggles
+  vcd_window:
+    start_time: 0
+    end_time: 100
