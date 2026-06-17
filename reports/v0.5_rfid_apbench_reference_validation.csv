@@ -1,0 +1,6 @@
+task_id,compile_status,simulation_status,activity_status,synthesis_status,area_status,timing_status,reference_area,area_unit,reference_activity,activity_metric,failure_category,notes
+ap_001_idle_counter,unavailable,unavailable,unavailable,unavailable,unavailable,not_required,,,,,tool_unavailable,"Icarus unavailable: iverilog, vvp; Yosys unavailable"
+ap_002_command_decoder,unavailable,unavailable,unavailable,unavailable,unavailable,not_required,,,,,tool_unavailable,"Icarus unavailable: iverilog, vvp; Yosys unavailable"
+ap_003_register_bank_unnecessary_writes,unavailable,unavailable,unavailable,unavailable,unavailable,not_required,,,,,tool_unavailable,"Icarus unavailable: iverilog, vvp; Yosys unavailable"
+ap_004_crc_serial_parallel_tradeoff,unavailable,unavailable,unavailable,unavailable,unavailable,not_required,,,,,tool_unavailable,"Icarus unavailable: iverilog, vvp; Yosys unavailable"
+ap_005_fsm_controller_idle_activity,unavailable,unavailable,unavailable,unavailable,unavailable,not_required,,,,,tool_unavailable,"Icarus unavailable: iverilog, vvp; Yosys unavailable"
