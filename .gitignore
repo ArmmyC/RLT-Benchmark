@@ -6,6 +6,8 @@
 __pycache__/
 *.py[cod]
 outputs/
-benchmarks/
+benchmarks/*
+!benchmarks/rfid_apbench/
+!benchmarks/rfid_apbench/**
 logs/*.out
 logs/*.err

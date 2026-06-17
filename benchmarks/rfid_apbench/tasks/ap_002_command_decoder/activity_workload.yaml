@@ -1,0 +1,14 @@
+schema_version: "rfid_apbench_activity/v0.1"
+workload_id: ap_002_command_decoder_default
+clock: null
+reset: null
+measurement_window:
+  start_time: 0
+  end_time: 120
+stimulus:
+  type: deterministic
+  description: "Sweep legal commands, one illegal command, and an invalid cycle."
+vcd:
+  include_scope: testbench
+  exclude_signals: []
+activity_metric: total_signal_toggles

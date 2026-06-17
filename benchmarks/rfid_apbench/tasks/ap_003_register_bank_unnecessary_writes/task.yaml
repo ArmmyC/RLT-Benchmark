@@ -1,0 +1,25 @@
+schema_version: "rfid_apbench_task/v0.1"
+task_id: ap_003_register_bank_unnecessary_writes
+title: "Register bank unnecessary writes"
+domain: rfid_nfc_synthetic
+public_synthetic: true
+top_module: ap_003_register_bank_unnecessary_writes
+language: systemverilog
+interfaces:
+  clock: clk
+  reset: rst_n
+correctness:
+  method: simulation
+  testbench: testbench.sv
+synthesis:
+  flow_id: yosys_generic
+  top_module: ap_003_register_bank_unnecessary_writes
+timing:
+  required: false
+  constraint_file: null
+activity:
+  workload: activity_workload.yaml
+  metric: total_signal_toggles
+  vcd_window:
+    start_time: 0
+    end_time: 220

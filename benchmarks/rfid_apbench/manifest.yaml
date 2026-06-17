@@ -1,0 +1,17 @@
+schema_version: "rfid_apbench_manifest/v0.1"
+benchmark: rfid_apbench
+description: "Public/synthetic RFID/NFC-style area/activity benchmark MVP scaffold."
+scoring_mode: area_activity
+activity_definition: vcd_toggle_count_proxy
+public_synthetic: true
+tasks:
+  - task_id: ap_001_idle_counter
+    path: tasks/ap_001_idle_counter
+  - task_id: ap_002_command_decoder
+    path: tasks/ap_002_command_decoder
+  - task_id: ap_003_register_bank_unnecessary_writes
+    path: tasks/ap_003_register_bank_unnecessary_writes
+  - task_id: ap_004_crc_serial_parallel_tradeoff
+    path: tasks/ap_004_crc_serial_parallel_tradeoff
+  - task_id: ap_005_fsm_controller_idle_activity
+    path: tasks/ap_005_fsm_controller_idle_activity

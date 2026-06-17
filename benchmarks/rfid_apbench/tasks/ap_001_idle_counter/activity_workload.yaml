@@ -1,0 +1,15 @@
+schema_version: "rfid_apbench_activity/v0.1"
+workload_id: ap_001_idle_counter_default
+clock: clk
+reset: rst_n
+measurement_window:
+  start_time: 0
+  end_time: 200
+stimulus:
+  type: deterministic
+  description: "Reset, idle, active count to terminal value, idle hold, and clear."
+vcd:
+  include_scope: testbench
+  exclude_signals:
+    - clk
+activity_metric: total_signal_toggles
