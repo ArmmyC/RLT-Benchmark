@@ -609,6 +609,24 @@ def write_markdown_report(
         score_note = f"Valid scores range from {min(valid_scores):.6f} to {max(valid_scores):.6f}."
     else:
         score_note = "No valid scores were produced."
+    current_counts = {
+        "attempted samples": len(rows),
+        "generation completed": sum(1 for row in rows if row.generation_status == "completed"),
+        "extraction passed": sum(1 for row in rows if row.extraction_status == "passed"),
+        "compile passed": sum(1 for row in rows if row.compile_pass),
+        "correctness passed": sum(1 for row in rows if row.correctness_pass),
+        "synthesis passed": sum(1 for row in rows if row.synth_pass),
+        "valid scores": len(valid_scores),
+    }
+    five_task_counts = {
+        "attempted samples": 15,
+        "generation completed": 15,
+        "extraction passed": 12,
+        "compile passed": 11,
+        "correctness passed": 10,
+        "synthesis passed": 11,
+        "valid scores": 10,
+    }
     lines.extend(
         [
             "",
@@ -617,6 +635,19 @@ def write_markdown_report(
             f"- {score_note}",
             "- Invalid rows are counted as zero in the all-sample mean.",
             "- v0.5 one-sample smoke had 4 valid scores, mean valid score 0.946946, and all-sample zero-filled mean 0.757557.",
+            "",
+            "## Comparison Against Five-Task Post-Tool-Health Baseline",
+            "",
+            "The earlier five-task report is preserved. Counts are descriptive across different task sets and are not a model comparison.",
+            "",
+            "| metric | five-task baseline | current manifest baseline |",
+            "| --- | ---: | ---: |",
+            *[
+                f"| {metric} | {five_task_counts[metric]} | {current_counts[metric]} |"
+                for metric in five_task_counts
+            ],
+            f"| mean valid score | 0.961155 | {valid_mean:.6f} |",
+            f"| all-sample zero-filled mean | 0.640770 | {all_sample_mean:.6f} |",
             "",
             "## Activity Proxy Caveat",
             "",

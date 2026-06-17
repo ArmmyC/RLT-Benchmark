@@ -332,6 +332,8 @@ def test_report_writers_emit_sanitized_baseline(tmp_path: Path) -> None:
     assert "- Task count: 10" in markdown
     assert "- Samples per task: 3" in markdown
     assert "- Total sample count: 30" in markdown
+    assert "## Comparison Against Five-Task Post-Tool-Health Baseline" in markdown
+    assert "| attempted samples | 15 | 30 |" in markdown
     assert "raw_model_response" not in csv_text
     assert json_rows[0]["benchmark"] == "rfid_apbench"
     assert len(json_rows) == 30
