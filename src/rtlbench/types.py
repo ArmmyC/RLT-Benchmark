@@ -21,6 +21,14 @@ class GenerationResult:
     text: str
     latency_seconds: float
     usage: dict[str, Any] | None = None
+    request_outcome: str = "unavailable"
+    request_attempt_count: int = 1
+    response_choice_count: int | None = None
+    response_content_present: bool | None = None
+    response_character_count: int | None = None
+    finish_reason: str | None = None
+    http_status_class: str | None = None
+    response_parse_status: str = "parsed"
 
 
 @dataclass(frozen=True)

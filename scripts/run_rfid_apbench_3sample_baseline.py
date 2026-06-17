@@ -37,11 +37,26 @@ from run_rfid_apbench_model_smoke import (  # noqa: E402
 )
 from rtlbench.adapters.rfid_apbench import RFIDAPBenchAdapter, RFIDAPBenchTaskInfo  # noqa: E402
 from rtlbench.area_activity_scoring import validate_sanitized_record  # noqa: E402
-from rtlbench.client import OpenAICompatibleClient  # noqa: E402
+from rtlbench.client import GenerationRequestError, OpenAICompatibleClient  # noqa: E402
 from rtlbench.extraction import extract_all_rtl_modules  # noqa: E402
+from rtlbench.types import GenerationResult  # noqa: E402
 
 
 SAMPLES_PER_TASK = 3
+OBSERVABILITY_FIELDS = [
+    "request_outcome",
+    "request_attempt_count",
+    "latency_seconds",
+    "response_choice_count",
+    "response_content_present",
+    "response_character_count",
+    "finish_reason",
+    "prompt_tokens",
+    "completion_tokens",
+    "total_tokens",
+    "http_status_class",
+    "response_parse_status",
+]
 REPORT_FIELDS = [
     "benchmark",
     "task_id",
@@ -52,6 +67,7 @@ REPORT_FIELDS = [
     "top_p",
     "max_tokens",
     "endpoint_status",
+    *OBSERVABILITY_FIELDS,
     "generation_status",
     "extraction_status",
     "candidate_file_available",
@@ -87,6 +103,18 @@ class GenerationRecord:
     candidate_file_available: bool
     failure_category: str
     notes: str
+    request_outcome: str = "unavailable"
+    request_attempt_count: int | None = None
+    latency_seconds: float | None = None
+    response_choice_count: int | None = None
+    response_content_present: bool | None = None
+    response_character_count: int | None = None
+    finish_reason: str | None = None
+    prompt_tokens: int | None = None
+    completion_tokens: int | None = None
+    total_tokens: int | None = None
+    http_status_class: str | None = None
+    response_parse_status: str = "unavailable"
 
 
 @dataclass
@@ -123,6 +151,18 @@ class BaselineRow:
     toolchain_id: str
     workload_id: str
     notes: str
+    request_outcome: str = "unavailable"
+    request_attempt_count: int | None = None
+    latency_seconds: float | None = None
+    response_choice_count: int | None = None
+    response_content_present: bool | None = None
+    response_character_count: int | None = None
+    finish_reason: str | None = None
+    prompt_tokens: int | None = None
+    completion_tokens: int | None = None
+    total_tokens: int | None = None
+    http_status_class: str | None = None
+    response_parse_status: str = "unavailable"
 
     def sanitized_dict(self) -> dict[str, object]:
         data = asdict(self)
@@ -181,6 +221,11 @@ def make_blocker_rows(
     else:
         failure_category = "tool_health_failed"
         notes = "3-sample baseline blocked because an EDA tool failed its health check"
+    request_outcome = (
+        "endpoint_unavailable"
+        if failure_category == "endpoint_unavailable"
+        else "tool_health_blocker"
+    )
     rows: list[BaselineRow] = []
     for sample_id in range(1, samples + 1):
         for task in tasks:
@@ -218,6 +263,9 @@ def make_blocker_rows(
                     toolchain_id="unavailable",
                     workload_id=str(task.activity_workload.get("workload_id", "unknown_workload")),
                     notes=notes,
+                    request_outcome=request_outcome,
+                    request_attempt_count=0,
+                    response_parse_status="not_attempted",
                 )
             )
     return rows
@@ -236,6 +284,29 @@ def endpoint_reachable(endpoint: EndpointConfig) -> bool:
     except httpx.HTTPError:
         return False
     return True
+
+
+def _generation_observability(result: GenerationResult) -> dict[str, object]:
+    usage = result.usage if isinstance(result.usage, dict) else {}
+    return {
+        "request_outcome": result.request_outcome,
+        "request_attempt_count": result.request_attempt_count,
+        "latency_seconds": result.latency_seconds,
+        "response_choice_count": result.response_choice_count,
+        "response_content_present": result.response_content_present,
+        "response_character_count": result.response_character_count,
+        "finish_reason": result.finish_reason,
+        "prompt_tokens": _usage_count(usage, "prompt_tokens"),
+        "completion_tokens": _usage_count(usage, "completion_tokens"),
+        "total_tokens": _usage_count(usage, "total_tokens"),
+        "http_status_class": result.http_status_class,
+        "response_parse_status": result.response_parse_status,
+    }
+
+
+def _usage_count(usage: dict[str, object], key: str) -> int | None:
+    value = usage.get(key)
+    return value if isinstance(value, int) and not isinstance(value, bool) else None
 
 
 def generate_samples(
@@ -276,7 +347,7 @@ def generate_samples(
                         top_p=top_p,
                         max_tokens=max_tokens,
                     )
-                except Exception as exc:  # noqa: BLE001 - report bounded failures per sample.
+                except GenerationRequestError as exc:
                     records[(task.task_id, sample_id)] = GenerationRecord(
                         task_id=task.task_id,
                         sample_id=sample_id,
@@ -285,9 +356,35 @@ def generate_samples(
                         candidate_file_available=False,
                         failure_category="request_failed",
                         notes=_safe_report_note(f"generation request failed: {exc}"),
+                        request_outcome=exc.request_outcome,
+                        request_attempt_count=exc.request_attempt_count,
+                        latency_seconds=exc.latency_seconds,
+                        response_choice_count=exc.response_choice_count,
+                        response_content_present=exc.response_content_present,
+                        response_character_count=exc.response_character_count,
+                        finish_reason=exc.finish_reason,
+                        prompt_tokens=exc.prompt_tokens,
+                        completion_tokens=exc.completion_tokens,
+                        total_tokens=exc.total_tokens,
+                        http_status_class=exc.http_status_class,
+                        response_parse_status=exc.response_parse_status,
+                    )
+                    continue
+                except Exception:  # noqa: BLE001 - report bounded failures per sample.
+                    records[(task.task_id, sample_id)] = GenerationRecord(
+                        task_id=task.task_id,
+                        sample_id=sample_id,
+                        generation_status="request_failed",
+                        extraction_status="not_run",
+                        candidate_file_available=False,
+                        failure_category="request_failed",
+                        notes="generation request failed: unclassified request error",
+                        request_outcome="request_failure",
+                        response_parse_status="unavailable",
                     )
                     continue
 
+                observability = _generation_observability(result)
                 raw_path = raw_dir / f"{task.task_id}_{sample_name}.txt"
                 raw_path.write_text(result.text, encoding="utf-8")
                 if not result.text.strip():
@@ -299,6 +396,7 @@ def generate_samples(
                         candidate_file_available=False,
                         failure_category="empty_response",
                         notes="empty response",
+                        **observability,
                     )
                     continue
 
@@ -312,6 +410,7 @@ def generate_samples(
                         candidate_file_available=False,
                         failure_category="extraction_failure",
                         notes="no complete required top rtl_unit extracted",
+                        **observability,
                     )
                     continue
 
@@ -327,6 +426,7 @@ def generate_samples(
                     candidate_file_available=True,
                     failure_category="passed",
                     notes="generation and extraction completed",
+                    **observability,
                 )
     finally:
         client.close()
@@ -433,6 +533,18 @@ def merge_rows(
                     toolchain_id=evaluation.toolchain_id,
                     workload_id=evaluation.workload_id,
                     notes=notes,
+                    request_outcome=generation.request_outcome,
+                    request_attempt_count=generation.request_attempt_count,
+                    latency_seconds=generation.latency_seconds,
+                    response_choice_count=generation.response_choice_count,
+                    response_content_present=generation.response_content_present,
+                    response_character_count=generation.response_character_count,
+                    finish_reason=generation.finish_reason,
+                    prompt_tokens=generation.prompt_tokens,
+                    completion_tokens=generation.completion_tokens,
+                    total_tokens=generation.total_tokens,
+                    http_status_class=generation.http_status_class,
+                    response_parse_status=generation.response_parse_status,
                 )
             )
     return rows
@@ -474,6 +586,7 @@ def write_markdown_report(
     task_ids = sorted({row.task_id for row in rows})
     samples_per_task = len({row.sample_id for row in rows}) if rows else 0
     effective_endpoint_status = rows[0].endpoint_status if rows else endpoint.status
+    request_outcomes = Counter(row.request_outcome for row in rows)
     lines = [
         "# v0.6 RFID-APBench 3-Sample Baseline",
         "",
@@ -507,6 +620,23 @@ def write_markdown_report(
         f"- Icarus Verilog compile: `{_tool_status(tools.iverilog, tools.iverilog_healthy)}`",
         f"- Icarus runtime vvp: `{_tool_status(tools.vvp, tools.vvp_healthy)}`",
         f"- Yosys synthesis: `{_tool_status(tools.yosys, tools.yosys_healthy)}`",
+        "",
+        "## Request And Response Observability",
+        "",
+        "Only sanitized metadata is reported; raw prompt and response content is excluded.",
+        "",
+        "| request_outcome | rows |",
+        "| --- | ---: |",
+        *[
+            f"| {outcome} | {count} |"
+            for outcome, count in sorted(request_outcomes.items())
+        ],
+        "",
+        f"- Request attempt count available: {sum(1 for row in rows if row.request_attempt_count is not None)}/{len(rows)}",
+        f"- Latency available: {sum(1 for row in rows if row.latency_seconds is not None)}/{len(rows)}",
+        f"- Response choice count available: {sum(1 for row in rows if row.response_choice_count is not None)}/{len(rows)}",
+        f"- Response character count available: {sum(1 for row in rows if row.response_character_count is not None)}/{len(rows)}",
+        f"- Completion-token count available: {sum(1 for row in rows if row.completion_tokens is not None)}/{len(rows)}",
         "",
         "## Aggregate Gate Counts",
         "",

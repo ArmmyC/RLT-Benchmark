@@ -95,6 +95,8 @@ def test_blocker_rows_cover_ten_tasks_and_three_samples() -> None:
     assert {item.task_id for item in rows} == {task.task_id for task in tasks()}
     assert {item.sample_id for item in rows} == {1, 2, 3}
     assert {item.failure_category for item in rows} == {"endpoint_unavailable"}
+    assert {item.request_outcome for item in rows} == {"endpoint_unavailable"}
+    assert {item.request_attempt_count for item in rows} == {0}
     for item in rows:
         item.sanitized_dict()
 
@@ -120,6 +122,7 @@ def test_missing_tools_create_tool_blocker_rows() -> None:
     assert len(rows) == 30
     assert {item.failure_category for item in rows} == {"tool_unavailable"}
     assert {item.endpoint_status for item in rows} == {"available"}
+    assert {item.request_outcome for item in rows} == {"tool_health_blocker"}
 
 
 def test_unhealthy_tools_create_health_blocker_rows() -> None:
@@ -173,6 +176,10 @@ def test_request_failures_are_sanitized_rows() -> None:
         candidate_file_available=False,
         failure_category="request_failed",
         notes="generation request failed: connection reset",
+        request_outcome="transport_error",
+        request_attempt_count=3,
+        latency_seconds=0.5,
+        response_parse_status="not_attempted",
     )
     evaluation = baseline.CandidateEvaluationRow(
         task_id=task.task_id,
@@ -214,7 +221,94 @@ def test_request_failures_are_sanitized_rows() -> None:
     assert rows[0].failure_category == "request_failed"
     assert rows[0].generation_status == "request_failed"
     assert rows[0].endpoint_status == "available"
+    assert rows[0].request_outcome == "transport_error"
+    assert rows[0].request_attempt_count == 3
+    assert rows[0].latency_seconds == 0.5
     rows[0].sanitized_dict()
+
+
+def test_generate_samples_propagates_empty_success_metadata(monkeypatch, tmp_path: Path) -> None:
+    task = tasks()[0]
+    config = baseline.EndpointConfig(
+        base_url="http://127.0.0.1:8000/v1",
+        credential="local-vllm-no-auth",
+        model="qwen36-27b",
+        timeout_seconds=1.0,
+    )
+
+    monkeypatch.setattr(
+        baseline.OpenAICompatibleClient,
+        "generate",
+        lambda self, **kwargs: baseline.GenerationResult(
+            text="",
+            latency_seconds=0.25,
+            usage={"prompt_tokens": 12, "completion_tokens": 0, "total_tokens": 12},
+            request_outcome="success_empty",
+            request_attempt_count=2,
+            response_choice_count=1,
+            response_content_present=True,
+            response_character_count=0,
+            finish_reason="stop",
+            http_status_class="2xx",
+            response_parse_status="parsed",
+        ),
+    )
+
+    record = baseline.generate_samples(
+        tasks=[task],
+        endpoint=config,
+        run_root=tmp_path / "run",
+        candidate_root=tmp_path / "candidates",
+        samples=1,
+        temperature=0.0,
+        top_p=1.0,
+        max_tokens=4096,
+    )[(task.task_id, 1)]
+
+    assert record.failure_category == "empty_response"
+    assert record.request_outcome == "success_empty"
+    assert record.request_attempt_count == 2
+    assert record.latency_seconds == 0.25
+    assert record.response_character_count == 0
+    assert record.completion_tokens == 0
+    assert record.total_tokens == 12
+
+
+def test_generate_samples_propagates_structured_request_failure(monkeypatch, tmp_path: Path) -> None:
+    task = tasks()[0]
+    config = baseline.EndpointConfig(
+        base_url="http://127.0.0.1:8000/v1",
+        credential="local-vllm-no-auth",
+        model="qwen36-27b",
+        timeout_seconds=1.0,
+    )
+
+    def fail(self, **kwargs):
+        raise baseline.GenerationRequestError(
+            request_outcome="timeout",
+            request_attempt_count=3,
+            latency_seconds=3.0,
+            response_parse_status="not_attempted",
+        )
+
+    monkeypatch.setattr(baseline.OpenAICompatibleClient, "generate", fail)
+
+    record = baseline.generate_samples(
+        tasks=[task],
+        endpoint=config,
+        run_root=tmp_path / "run",
+        candidate_root=tmp_path / "candidates",
+        samples=1,
+        temperature=0.0,
+        top_p=1.0,
+        max_tokens=4096,
+    )[(task.task_id, 1)]
+
+    assert record.failure_category == "request_failed"
+    assert record.request_outcome == "timeout"
+    assert record.request_attempt_count == 3
+    assert record.latency_seconds == 3.0
+    assert record.response_parse_status == "not_attempted"
 
 
 def test_missing_current_candidate_cannot_inherit_stale_metrics() -> None:
@@ -334,6 +428,10 @@ def test_report_writers_emit_sanitized_baseline(tmp_path: Path) -> None:
     assert "- Total sample count: 30" in markdown
     assert "## Comparison Against Five-Task Post-Tool-Health Baseline" in markdown
     assert "| attempted samples | 15 | 30 |" in markdown
+    assert "## Request And Response Observability" in markdown
+    assert "raw response fixture" not in markdown
     assert "raw_model_response" not in csv_text
     assert json_rows[0]["benchmark"] == "rfid_apbench"
+    assert set(baseline.OBSERVABILITY_FIELDS) <= set(json_rows[0])
+    assert all(field in csv_text.splitlines()[0] for field in baseline.OBSERVABILITY_FIELDS)
     assert len(json_rows) == 30
