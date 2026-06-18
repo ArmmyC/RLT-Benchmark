@@ -493,6 +493,15 @@ def test_main_rejects_samples_per_task_other_than_three(monkeypatch) -> None:
         baseline.main()
 
 
+def test_single_sample_requires_explicit_validation_gate() -> None:
+    baseline.validate_sample_count(1, True)
+
+    with pytest.raises(ValueError, match="explicit validation may use exactly 1"):
+        baseline.validate_sample_count(1, False)
+    with pytest.raises(ValueError, match="explicit validation may use exactly 1"):
+        baseline.validate_sample_count(2, True)
+
+
 def test_report_writers_emit_sanitized_baseline(tmp_path: Path) -> None:
     config = baseline.EndpointConfig(
         base_url="http://127.0.0.1:8000/v1",

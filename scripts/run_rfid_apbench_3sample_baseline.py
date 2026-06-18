@@ -864,6 +864,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--benchmark-root", type=Path, default=Path("benchmarks/rfid_apbench"))
     parser.add_argument("--samples-per-task", type=int, default=SAMPLES_PER_TASK)
     parser.add_argument(
+        "--allow-single-sample-validation",
+        action="store_true",
+        help="Permit exactly one sample per task for an explicitly bounded validation run.",
+    )
+    parser.add_argument(
         "--task-id",
         dest="task_ids",
         action="append",
@@ -886,10 +891,20 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def validate_sample_count(samples_per_task: int, allow_single_sample_validation: bool) -> None:
+    if samples_per_task == SAMPLES_PER_TASK:
+        return
+    if allow_single_sample_validation and samples_per_task == 1:
+        return
+    raise ValueError(
+        "RFID-APBench baseline is bounded to exactly 3 samples per task; "
+        "explicit validation may use exactly 1"
+    )
+
+
 def main() -> int:
     args = parse_args()
-    if args.samples_per_task != SAMPLES_PER_TASK:
-        raise ValueError("v0.6 RFID-APBench baseline is bounded to exactly 3 samples per task")
+    validate_sample_count(args.samples_per_task, args.allow_single_sample_validation)
 
     benchmark_root = args.benchmark_root.resolve()
     tasks = load_tasks(benchmark_root, args.task_ids)
