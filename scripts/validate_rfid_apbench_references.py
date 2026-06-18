@@ -262,11 +262,11 @@ def write_markdown_report(
 ) -> None:
     output_md.parent.mkdir(parents=True, exist_ok=True)
     lines = [
-        "# v0.5 RFID-APBench Reference Validation",
+        "# RFID-APBench Reference Validation",
         "",
         "## Scope",
         "",
-        "This report validates the five committed public/synthetic RFID-APBench reference tasks before any model-generated RTL is evaluated.",
+        "This report validates the current committed public/synthetic RFID-APBench reference tasks before any model-generated RTL is evaluated.",
         "",
         "Activity is a VCD toggle-count proxy from the declared workload. It is not measured power, signoff power, or final silicon PPA.",
         "",
@@ -330,7 +330,7 @@ def write_markdown_report(
             "",
             "## Artifact Policy",
             "",
-            "The validation script writes VCDs, simulator binaries, and synthesis scratch material only under the requested temporary work directory. Only this sanitized Markdown report and the companion CSV are intended for commit.",
+            "The validation script writes VCDs, simulator binaries, and synthesis scratch material only under the requested temporary work directory. Only this sanitized Markdown report and the companion CSV are intended for commit or CI upload.",
             "",
         ]
     )
@@ -406,8 +406,8 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Validate public RFID-APBench reference tasks.")
     parser.add_argument("--benchmark-root", type=Path, default=Path("benchmarks/rfid_apbench"))
     parser.add_argument("--work-dir", type=Path, default=Path(".tmp/rfid_apbench_reference_validation"))
-    parser.add_argument("--output-md", type=Path, default=Path("reports/v0.5_rfid_apbench_reference_validation.md"))
-    parser.add_argument("--output-csv", type=Path, default=Path("reports/v0.5_rfid_apbench_reference_validation.csv"))
+    parser.add_argument("--output-md", type=Path, default=Path("reports/rfid_apbench_reference_validation.md"))
+    parser.add_argument("--output-csv", type=Path, default=Path("reports/rfid_apbench_reference_validation.csv"))
     parser.add_argument(
         "--write-reference-metrics",
         action="store_true",
