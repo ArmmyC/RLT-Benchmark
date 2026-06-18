@@ -287,6 +287,7 @@ def test_generate_samples_propagates_empty_success_metadata(monkeypatch, tmp_pat
         temperature=0.0,
         top_p=1.0,
         max_tokens=4096,
+        system_prompt="test system prompt",
     )[(task.task_id, 1)]
 
     assert record.failure_category == "empty_response"
@@ -326,6 +327,7 @@ def test_generate_samples_propagates_structured_request_failure(monkeypatch, tmp
         temperature=0.0,
         top_p=1.0,
         max_tokens=4096,
+        system_prompt="test system prompt",
     )[(task.task_id, 1)]
 
     assert record.failure_category == "request_failed"
@@ -422,6 +424,46 @@ def test_task_id_filters_are_repeatable(monkeypatch) -> None:
     args = baseline.parse_args()
 
     assert args.task_ids == ["ap_001_idle_counter", "ap_010_retry_timeout_fsm"]
+
+
+def test_completion_reliability_profile_is_resolved() -> None:
+    prompt = baseline.resolve_system_prompt("completion_reliability")
+
+    assert "complete" in prompt
+    assert "endmodule" in prompt
+    assert "Markdown fences" in prompt
+
+
+def test_generate_samples_propagates_resolved_system_prompt(monkeypatch, tmp_path: Path) -> None:
+    task = tasks()[0]
+    config = baseline.EndpointConfig(
+        base_url="http://127.0.0.1:8000/v1",
+        credential="local-vllm-no-auth",
+        model="qwen36-27b",
+        timeout_seconds=1.0,
+    )
+    observed: dict[str, object] = {}
+
+    def generate(self, **kwargs):
+        observed.update(kwargs)
+        return baseline.GenerationResult(text="")
+
+    monkeypatch.setattr(baseline.OpenAICompatibleClient, "generate", generate)
+    expected_prompt = baseline.resolve_system_prompt("completion_reliability")
+
+    baseline.generate_samples(
+        tasks=[task],
+        endpoint=config,
+        run_root=tmp_path / "run",
+        candidate_root=tmp_path / "candidates",
+        samples=1,
+        temperature=0.0,
+        top_p=1.0,
+        max_tokens=4096,
+        system_prompt=expected_prompt,
+    )
+
+    assert observed["system_prompt"] == expected_prompt
 
 
 def test_main_rejects_samples_per_task_other_than_three(monkeypatch) -> None:

@@ -29,7 +29,6 @@ from evaluate_rfid_apbench_candidates import (  # noqa: E402
 from run_rfid_apbench_model_smoke import (  # noqa: E402
     DEFAULT_MODEL,
     DEFAULT_PROMPT_PROFILE,
-    SYSTEM_PROMPT,
     EndpointConfig,
     load_endpoint_config,
     make_candidate_id,
@@ -39,10 +38,12 @@ from rtlbench.adapters.rfid_apbench import RFIDAPBenchAdapter, RFIDAPBenchTaskIn
 from rtlbench.area_activity_scoring import validate_sanitized_record  # noqa: E402
 from rtlbench.client import GenerationRequestError, OpenAICompatibleClient  # noqa: E402
 from rtlbench.extraction import extract_all_rtl_modules  # noqa: E402
+from rtlbench.prompt_profiles import load_prompt_profiles  # noqa: E402
 from rtlbench.types import GenerationResult  # noqa: E402
 
 
 SAMPLES_PER_TASK = 3
+PROMPT_PROFILES_PATH = REPO_ROOT / "configs" / "prompt_profiles.yaml"
 OBSERVABILITY_FIELDS = [
     "request_outcome",
     "request_attempt_count",
@@ -191,6 +192,14 @@ def load_tasks(
     return [task for task in tasks if task.task_id in selected]
 
 
+def resolve_system_prompt(prompt_profile: str) -> str:
+    profiles = load_prompt_profiles(PROMPT_PROFILES_PATH)
+    if prompt_profile not in profiles:
+        available = ", ".join(sorted(profiles))
+        raise ValueError(f"Unknown prompt profile {prompt_profile!r}; available: {available}")
+    return profiles[prompt_profile]
+
+
 def tools_available(tools: ToolAvailability) -> bool:
     return tools.healthy_icarus and tools.healthy_yosys
 
@@ -332,6 +341,7 @@ def generate_samples(
     temperature: float,
     top_p: float,
     max_tokens: int,
+    system_prompt: str,
 ) -> dict[tuple[str, int], GenerationRecord]:
     raw_dir = run_root / "raw_responses"
     extracted_dir = run_root / "extracted_rtl"
@@ -354,7 +364,7 @@ def generate_samples(
                 try:
                     result = client.generate(
                         model=endpoint.model,
-                        system_prompt=SYSTEM_PROMPT,
+                        system_prompt=system_prompt,
                         user_prompt=task.prompt,
                         temperature=temperature,
                         top_p=top_p,
@@ -845,6 +855,7 @@ def main() -> int:
 
     benchmark_root = args.benchmark_root.resolve()
     tasks = load_tasks(benchmark_root, args.task_ids)
+    system_prompt = resolve_system_prompt(args.prompt_profile)
     endpoint = load_endpoint_config()
     tools = detect_tools()
     run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
@@ -892,6 +903,7 @@ def main() -> int:
             temperature=args.temperature,
             top_p=args.top_p,
             max_tokens=args.max_tokens,
+            system_prompt=system_prompt,
         )
         evaluation_rows = evaluate_samples(
             benchmark_root=benchmark_root,
