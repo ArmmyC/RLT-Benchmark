@@ -53,8 +53,8 @@ jobs:
           python scripts/validate_rfid_apbench_references.py \
             --benchmark-root benchmarks/rfid_apbench \
             --work-dir .tmp/rfid_apbench_reference_validation \
-            --output-md reports/v0.5_rfid_apbench_reference_validation.md \
-            --output-csv reports/v0.5_rfid_apbench_reference_validation.csv \
+            --output-md reports/rfid_apbench_reference_validation.md \
+            --output-csv reports/rfid_apbench_reference_validation.csv \
             --write-reference-metrics
 
       - name: Require tool-enabled reference success
@@ -63,8 +63,15 @@ jobs:
           import csv
           from pathlib import Path
 
-          rows = list(csv.DictReader(Path("reports/v0.5_rfid_apbench_reference_validation.csv").open()))
-          assert len(rows) == 5, f"expected 5 tasks, got {len(rows)}"
+          import yaml
+
+          manifest = yaml.safe_load(Path("benchmarks/rfid_apbench/manifest.yaml").read_text())
+          expected_tasks = [entry["task_id"] for entry in manifest["tasks"]]
+          rows = list(csv.DictReader(Path("reports/rfid_apbench_reference_validation.csv").open()))
+          row_task_ids = [row["task_id"] for row in rows]
+          assert row_task_ids == expected_tasks, (
+              f"expected reference rows for manifest tasks {expected_tasks}, got {row_task_ids}"
+          )
           required = [
               "compile_status",
               "simulation_status",
@@ -85,7 +92,7 @@ jobs:
         with:
           name: rfid-apbench-reference-validation-reports
           path: |
-            reports/v0.5_rfid_apbench_reference_validation.md
-            reports/v0.5_rfid_apbench_reference_validation.csv
+            reports/rfid_apbench_reference_validation.md
+            reports/rfid_apbench_reference_validation.csv
             benchmarks/rfid_apbench/tasks/*/expected/reference_metrics.yaml
           if-no-files-found: error
