@@ -1,196 +1,262 @@
 # RTLBench
 
-RTLBench is a reusable benchmark harness for evaluating RTL-generating models through an OpenAI-compatible API. Model access, benchmark loading, code extraction, simulation, and reporting are separate components so models and benchmark suites can be changed independently.
+A lightweight benchmark harness for evaluating LLM-generated RTL with simulation, synthesis, and area/activity scoring.
 
-The harness includes adapters for VerilogEval v2, RTLLM 2.0, ProtocolLLM public lint, and RTL-OPT lint/synthesis/equivalence.
+RTLBench helps you ask a simple question with real engineering gates behind it: _did the model generate usable RTL, and what did it cost under a public, reproducible flow?_
 
-## Layout
+[Quick start](#quick-start) - [RFID-APBench](#rfid-apbench) - [Scoring](#scoring) - [Docs](#useful-docs)
+
+> [!IMPORTANT]
+> RTLBench is an evaluation repository, not a fine-tuning repository. It does not contain private RTL, training datasets, adapters, model weights, or raw model outputs.
+
+## What It Does
+
+| Capability | What RTLBench records |
+| --- | --- |
+| OpenAI-compatible generation | Model endpoint, prompt profile, request metadata, token metadata |
+| RTL extraction | Complete module extraction for the expected top module |
+| Correctness gates | Compile and functional simulation outcomes |
+| Synthesis | Yosys generic-cell synthesis results |
+| Activity proxy | VCD toggle-count activity under declared workloads |
+| Reporting | Sanitized Markdown, CSV, and JSONL summaries |
+
+RTLBench is designed for public benchmark work where repeatability and artifact hygiene matter more than raw throughput.
+
+## Why It Exists
+
+RTL generation benchmarks often stop at syntax or compile success. RTLBench keeps the flow closer to hardware reality:
+
+- extract the generated RTL
+- compile it
+- run deterministic functional checks
+- synthesize it
+- measure generic area
+- count VCD toggles as an activity proxy
+- score only candidates that pass the required gates
+
+This makes failures easier to classify and helps avoid overclaiming from lint-only or synthesis-only results.
+
+## What's Included
+
+- `src/rtlbench/`: reusable API client, adapters, extraction, evaluation, scoring, reporting, and dashboard helpers
+- `benchmarks/rfid_apbench/`: current public/synthetic RFID/NFC-style benchmark
+- `scripts/`: benchmark runners, report builders, validators, and utility scripts
+- `configs/`: model presets, prompt profiles, and benchmark configs
+- `tests/`: unit tests for clients, adapters, scoring, reporting, extraction, and RFID-APBench flows
+- `docs/release/`: release, reproducibility, and report-hygiene docs for RFID-APBench
+
+The harness also has adapters for VerilogEval v2, RTLLM 2.0, ProtocolLLM public lint, and RTL-OPT flows, but the current active benchmark documentation focuses on RFID-APBench.
+
+## RFID-APBench
+
+RFID-APBench is a public/synthetic RFID/NFC-style RTL benchmark for correctness-gated area/activity evaluation.
+
+- 10 small tasks under `benchmarks/rfid_apbench/tasks/`
+- public prompts, references, testbenches, and workloads
+- deterministic compile/simulation correctness gates
+- Yosys generic-cell area
+- VCD toggle-count activity proxy
+- sanitized report outputs only
+
+> [!NOTE]
+> Activity is a VCD toggle-count proxy from a declared public workload. It is not measured silicon power, signoff power, final silicon PPA, or production QoR.
+
+Current task inventory:
+
+| Task | Summary |
+| --- | --- |
+| `ap_001_idle_counter` | Idle-aware saturating counter |
+| `ap_002_command_decoder` | Small command decoder |
+| `ap_003_register_bank_unnecessary_writes` | Register bank with stable disabled writes |
+| `ap_004_crc_serial_parallel_tradeoff` | CRC update block |
+| `ap_005_fsm_controller_idle_activity` | Low-duty-cycle controller FSM |
+| `ap_006_wakeup_edge_filter` | Enabled rising-edge wakeup pulse filter |
+| `ap_007_command_frame_checker` | Command-frame validity checker |
+| `ap_008_byte_lane_write_gate` | Byte-lane gated register writes |
+| `ap_009_serial_parity_accumulator` | Serial parity and bit-count accumulator |
+| `ap_010_retry_timeout_fsm` | Retry and timeout controller |
+
+## Evaluation Flow
+
+```mermaid
+flowchart LR
+    A["Prompt + task assets"] --> B["OpenAI-compatible model API"]
+    B --> C["Extract RTL module"]
+    C --> D["Icarus compile"]
+    D --> E["Functional simulation"]
+    E --> F["Yosys synthesis"]
+    E --> G["VCD activity count"]
+    F --> H["area_activity score"]
+    G --> H
+    H --> I["Sanitized Markdown / CSV / JSONL"]
+```
+
+Rows that fail extraction, compile, simulation, synthesis, or metric availability are reported with failure categories and excluded from valid-score means.
+
+## Quick Start
+
+### 1. Install
+
+```bash
+python -m pip install -e ".[dev]"
+```
+
+Install the local RTL tools used by RFID-APBench:
+
+- Icarus Verilog: `iverilog`
+- Icarus runtime: `vvp`
+- Yosys
+
+On Windows, confirm the tools are visible:
+
+```powershell
+where.exe iverilog
+where.exe vvp
+where.exe yosys
+```
+
+### 2. Configure A Model Endpoint
+
+RTLBench uses OpenAI-compatible APIs. Use placeholders in docs and commits; keep real values local.
+
+```powershell
+$env:QWEN_BASE_URL = "http://<host>:<port>/v1"
+$env:QWEN_API_KEY = "<api-key-or-local-placeholder>"
+$env:QWEN_MODEL = "qwen36-27b"
+$env:QWEN_TIMEOUT = "120"
+```
+
+You can also use a local `.env` file:
+
+```dotenv
+QWEN_BASE_URL=http://<host>:<port>/v1
+QWEN_API_KEY=<api-key-or-local-placeholder>
+QWEN_MODEL=qwen36-27b
+QWEN_TIMEOUT=120
+```
+
+`.env` is ignored and must not be committed.
+
+> [!TIP]
+> Model presets live in `configs/models.yaml`. The `qwen36-27b` preset forwards `chat_template_kwargs.enable_thinking=false` through the runner's `extra_body` path.
+
+### 3. Run Tests
+
+```bash
+python -m pytest
+```
+
+### 4. Run RFID-APBench
+
+Example full 10-task x 3-sample run:
+
+```powershell
+python scripts\run_rfid_apbench_3sample_baseline.py `
+  --benchmark-root benchmarks\rfid_apbench `
+  --samples-per-task 3 `
+  --prompt-profile neutral_baseline `
+  --temperature 0.0 `
+  --top-p 1.0 `
+  --max-tokens 4096 `
+  --output-md reports\rfid_apbench_baseline.md `
+  --output-csv reports\rfid_apbench_baseline.csv `
+  --output-jsonl reports\rfid_apbench_baseline.jsonl `
+  --output-root outputs\rfid_apbench\baseline `
+  --work-dir .tmp\rfid_apbench_baseline
+```
+
+Targeted run for one task:
+
+```powershell
+python scripts\run_rfid_apbench_3sample_baseline.py `
+  --task-id ap_001_idle_counter `
+  --samples-per-task 3 `
+  --prompt-profile neutral_baseline `
+  --max-tokens 4096 `
+  --output-md reports\rfid_apbench_ap001.md `
+  --output-csv reports\rfid_apbench_ap001.csv `
+  --output-jsonl reports\rfid_apbench_ap001.jsonl `
+  --output-root outputs\rfid_apbench\ap001 `
+  --work-dir .tmp\rfid_apbench_ap001
+```
+
+## Outputs
+
+Commit-safe outputs are sanitized reports:
 
 ```text
-configs/                  Reproducible run configurations
-scripts/                  Lanta setup and Slurm launch scripts
-src/rtlbench/adapters/    Benchmark-specific task loaders and prompts
-src/rtlbench/             API client, extraction, evaluation, metrics, reports
+reports/
+  *.md      human-readable summaries
+  *.csv     row-level tabular summaries
+  *.jsonl   sanitized structured rows
+```
+
+Raw and generated artifacts stay ignored:
+
+```text
+outputs/          raw responses, extracted RTL, run logs
+.tmp/             evaluator work directories and compiled scratch
+*.vcd             activity waveforms
+```
+
+## Scoring
+
+RFID-APBench uses correctness-gated `area_activity` scoring.
+
+1. **Extraction**: find a complete module for the required top module.
+2. **Compile**: compile candidate RTL with Icarus Verilog.
+3. **Correctness**: pass the public functional simulation testbench.
+4. **Synthesis**: synthesize with Yosys and read generic cell counts.
+5. **Activity**: count VCD signal toggles in the declared workload window.
+6. **Score**: combine area and activity score terms only for valid rows.
+
+Invalid rows are counted as zero in all-sample score summaries. Valid-score means include only rows with valid scores.
+
+## Repository Layout
+
+```text
+benchmarks/rfid_apbench/  Public synthetic RFID benchmark assets
+configs/                  Model presets, prompt profiles, benchmark configs
+docs/                     User and release documentation
+reports/                  Sanitized reports only
+runs/                     Baseline registry metadata
+scripts/                  Runners, validators, exporters, report builders
+src/rtlbench/             Python package
 tests/                    Unit tests
-runs/                     Committed baseline run registry
-dashboard/                Generated static Baseline v0.1 dashboard
-benchmarks/               Local benchmark checkouts/data (gitignored)
-outputs/                  Timestamped run artifacts (gitignored)
+outputs/                  Ignored raw run artifacts
+.tmp/                     Ignored scratch/work directories
 ```
 
-Every run writes:
+## Artifact And Security Policy
 
-```text
-outputs/<benchmark>/<model>/<timestamp>/
-  config_snapshot.yaml
-  run_metadata.json
-  report.md
-  results.jsonl
-  summary.json
-  summary.csv
-  raw_responses/            Original model responses
-  extracted_rtl/            Extracted RTL
-  logs/
-    run_report.md           Human-readable run log: config, notes, findings
-    */                      Per-sample evaluator work directories
-  error_logs/
-    *.log                   Compile/simulation/synthesis/equivalence logs
-```
+Do not commit:
 
-## Lanta Setup
+- private RTL or private task text
+- raw prompts beyond public benchmark prompts
+- raw model responses or response bodies
+- generated model RTL
+- VCD files, simulator logs, synthesis logs, compiled artifacts, or scratch
+- secrets, endpoint credentials, private absolute paths
+- datasets, adapters, model weights, fine-tuning scripts
 
-The deployment path is:
+> [!CAUTION]
+> RTLBench is not a place to store training data, LoRA/QLoRA/DoRA adapters, checkpoints, model weights, or private evaluation traces.
 
-```text
-/project/zz992000-zdevb/zz992005/ub127/SiliconCraft/benchmark
-```
+## Current Status And Limitations
 
-Create the isolated Conda environment and install RTLBench plus Icarus Verilog:
+- RFID-APBench is public/synthetic and currently contains 10 tasks.
+- The v0.7 post-fix baseline closed the prior empty/null-content response-boundary issue for the recorded evidence.
+- The known v0.7 limitation is localized to `ap_006_wakeup_edge_filter` candidate behavior in that run.
+- Area is Yosys generic cells, not foundry area.
+- Activity is VCD toggle count, not measured power.
+- Reports are evaluation artifacts, not fine-tuning readiness evidence.
 
-```bash
-cd /project/zz992000-zdevb/zz992005/ub127/SiliconCraft/benchmark
-bash scripts/setup_lanta.sh
-```
+## Useful Docs
 
-Clone the official VerilogEval repository under `benchmarks/verilog-eval`:
-
-```bash
-git clone https://github.com/NVlabs/verilog-eval.git benchmarks/verilog-eval
-```
-
-The adapter natively loads the 156 VerilogEval v2 prompt, testbench, and reference-module triples in `dataset_spec-to-rtl`. It also accepts an original VerilogEval `.jsonl` or `.jsonl.gz` file whose rows contain `prompt`, `test` (or `testbench`), and preferably `task_id`.
-
-## Configuration
-
-Connection values can be supplied through YAML, CLI arguments, or environment variables. Environment variables are useful for secrets and model swaps:
-
-```bash
-export OPENAI_BASE_URL=http://<vllm-node>:8000/v1
-export OPENAI_API_KEY=EMPTY
-export OPENAI_MODEL=qwen36-27b
-export BENCHMARK_ROOT=$PWD/benchmarks/verilogeval
-```
-
-The legacy `QWEN_BASE_URL`, `QWEN_API_KEY`, and `QWEN_MODEL` variables are also accepted. Do not commit API keys to YAML.
-
-Model presets live in `configs/models.yaml`. Use `--model-preset` to swap served model names without changing benchmark settings:
-
-```bash
-.conda-env/bin/rtlbench --config configs/verilogeval.yaml \
-  --model-preset qwen36-35b-a3b \
-  --base-url http://<vllm-node>:8000/v1 \
-  --limit 3 --samples-per-task 1
-```
-
-## Run
-
-Three-task smoke test:
-
-```bash
-.conda-env/bin/rtlbench --config configs/verilogeval.yaml \
-  --limit 3 --samples-per-task 1 --temperature 0.2 \
-  --notes "Smoke test after changing prompt or evaluator behavior."
-```
-
-Larger pass@5 run:
-
-```bash
-.conda-env/bin/rtlbench --config configs/verilogeval.yaml \
-  --samples-per-task 5 --temperature 0.6 --workers 4
-```
-
-Submit the runner through Slurm. If `OPENAI_BASE_URL` is unset, the script discovers the node of a running `vllm-model` job:
-
-```bash
-mkdir -p logs
-sbatch --export=ALL,OPENAI_MODEL=qwen36-27b scripts/run_lanta.sbatch \
-  --limit 3 --samples-per-task 1
-```
-
-The benchmark job itself is CPU-only; the four A100 GPUs remain assigned to the vLLM serving job. This keeps generation reusable across benchmark suites and avoids loading a second model copy.
-
-## Experiment Logs
-
-Each run automatically writes `run_metadata.json` and `logs/run_report.md` inside its output directory. Use `--notes` to record the run intent or hypothesis.
-
-Human-curated experiment notes live under `logs/`, for example `logs/2026-06-11-verilogeval-v2-qwen36.md`.
-
-## Adding A Benchmark
-
-Implement `BenchmarkAdapter.load_tasks()` and `build_prompt()`, then register the adapter in `rtlbench.adapters.ADAPTERS`. Shared API calls, extraction, artifact handling, pass@k, and reporting require no changes. Add a benchmark-specific evaluator only when its official test flow cannot use the default Icarus compile-and-simulate path.
-
-## Tests
-
-```bash
-.conda-env/bin/python -m pytest
-```
-
-## Baseline v0.1 Reproducibility Package
-
-Baseline v0.1 freezes the current five-model public RTL comparison in `runs/index.yaml`. Generated Markdown, JSON, CSV, and static HTML artifacts come from this registry rather than hand-maintained comparison tables.
-
-Regenerate the package from the repository root:
-
-```bash
-python scripts/generate_comparison_report.py --registry runs/index.yaml --baseline baseline_v0_1
-python scripts/analyze_cross_model_failures.py --registry runs/index.yaml --baseline baseline_v0_1
-python scripts/build_dashboard.py --registry runs/index.yaml --baseline baseline_v0_1
-python -m pytest
-```
-
-Open `dashboard/index.html` directly in a browser; it has no server or external CDN dependency.
-
-Historical LANTA output folders are not present in every checkout. The registry prefers an accessible `summary.json`, otherwise it uses an explicitly labeled `manual_summary` transcribed from committed reports/manifests. Missing `results.jsonl` files produce warnings and an empty per-task failure state rather than fabricated data.
-
-See:
-
-- `docs/baseline_v0.1.md` for registry maintenance and generated artifacts.
-- `docs/lanta_single_model_workflow.md` for the serving/benchmark ownership boundary.
-
-## Baseline v0.2 Per-Task Failure Matrix
-
-Baseline v0.2 adds a lightweight, commit-safe per-task layer without changing the frozen v0.1 run selection. Generate sanitized artifacts first, then build the v0.2 matrix and dashboard:
-
-```bash
-python scripts/export_per_task_results.py --registry runs/index.yaml --baseline baseline_v0_1 --output-dir artifacts/baseline_v0.2
-python scripts/audit_baseline_consistency.py --registry runs/index.yaml --baseline baseline_v0_1 --per-task-artifacts artifacts/baseline_v0.2/per_task_results.jsonl --output-md reports/baseline_v0.2_consistency_audit.md --output-csv reports/baseline_v0.2_consistency_audit.csv
-python scripts/analyze_cross_model_failures.py --registry runs/index.yaml --baseline baseline_v0_1 --per-task-artifacts artifacts/baseline_v0.2/per_task_results.jsonl --output-md reports/baseline_v0.2_failure_matrix.md --output-csv reports/baseline_v0.2_failure_matrix.csv
-python scripts/build_dashboard.py --registry runs/index.yaml --baseline baseline_v0_1
-python -m pytest
-```
-
-Analysis uses accessible live `results.jsonl` first, sanitized artifacts second, and registered summaries last. Pass `--prefer-artifacts` to the analysis or dashboard command for a portable artifact-only view. The exporter never includes prompts, model responses, RTL, error-log contents, credentials, or paths to those raw artifacts.
-
-Before tagging a baseline, the consistency audit compares sanitized row and failure-category counts for every `source_run_id` against the summaries loaded from `runs/index.yaml`. Mismatches and missing run artifacts are warnings by default so the report can be reviewed; pass `--strict` to make either condition return a nonzero exit status. The audit is diagnostic and never rewrites registry summaries.
-
-See `docs/baseline_v0.2_per_task_failure_matrix.md` for the schema, source precedence, and limitations.
-
-## Baseline v0.3 Prompt Experiments
-
-Baseline v0.2 is frozen. Baseline v0.3 experiments compare prompt profiles on qwen36-27b only and keep their outputs separate from the v0.1/v0.2 reports and artifacts.
-
-Preview the complete smoke matrix without executing model calls:
-
-```bash
-python scripts/run_v0.3_prompt_smoke.py --base-url "$OPENAI_BASE_URL"
-```
-
-Preview the larger validation slice selected by the candidate decision report. This remains dry-run by default and targets only `neutral_baseline` and `strict_rtl_only`:
-
-```bash
-python scripts/run_v0.3_prompt_larger.py --base-url "$OPENAI_BASE_URL"
-```
-
-Omitting `--prompt-profile` preserves the historical runner behavior. See `docs/experiments/v0.3_qwen36_27b_prompt_experiments.md` for profile definitions, matched-setting rules, and the smoke-first expansion policy.
-
-## v0.4 PPA-Aware Optimization Design
-
-v0.4 defines a correctness-gated area/power scoring design before retesting held-back prompt profiles. The public RTL-OPT closeout keeps `neutral_baseline` as the default baseline and designates `conservative_area_v2` as the v0.4 public RTL-OPT challenger.
-
-See:
-
-- `docs/experiments/v0.4_ppa_aware_rtl_optimization.md` for the staged experiment plan.
-- `reports/v0.4_ppa_scoring_design.md` for scoring gates, formulas, sanitized fields, and public-flow limitations.
-- `reports/v0.4_conservative_area_v2_closeout.md` for the public RTL-OPT challenger decision record.
-
-Model serving, swapping, SSH/Slurm orchestration, OpenWebUI, and LiteLLM belong to the separate `Lanta-LLM-Hosting` repository, not this benchmark repository.
+- [RFID-APBench overview](docs/rfid_apbench.md)
+- [RFID-APBench release checklist](docs/release/rfid_apbench_release_checklist.md)
+- [RFID-APBench reproducibility guide](docs/release/rfid_apbench_reproducibility.md)
+- [RFID-APBench report hygiene](docs/release/rfid_apbench_report_hygiene.md)
+- [RFID-APBench task schema](docs/rfid_apbench_task_schema.md)
+- [Fine-tuning boundary](docs/fine_tuning_boundary.md)
+- [Docs index](docs/index.md)

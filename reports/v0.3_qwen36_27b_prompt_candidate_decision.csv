@@ -1,5 +1,0 @@
-prompt_profile,verilogeval_passed,rtllm2_passed,rtlopt_passed,total_passed,total_samples,decision,reason
-neutral_baseline,3,2,2,7,9,select,Best tied smoke total with no compile failures; use as default larger-run candidate.
-strict_rtl_only,3,2,2,7,9,select,Best tied smoke total with no compile failures; compare against neutral for stricter formatting value.
-low_area_low_power,3,2,1,6,9,hold,Matched leaders on VerilogEval and RTLLM but weaker on RTL-OPT equivalence smoke.
-no_explanation_code_only,3,1,1,5,9,hold,Weakest total; had one RTLLM compile failure and weak RTLLM/RTL-OPT smoke results.

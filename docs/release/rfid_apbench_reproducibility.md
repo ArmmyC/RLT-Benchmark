@@ -178,9 +178,9 @@ python scripts\evaluate_rfid_apbench_candidates.py `
   --benchmark-root benchmarks\rfid_apbench `
   --candidate-root benchmarks\rfid_apbench\candidates\reference_copy `
   --work-dir .tmp\rfid_apbench_candidate_smoke `
-  --output-md reports\v0.5_rfid_apbench_candidate_smoke.md `
-  --output-csv reports\v0.5_rfid_apbench_candidate_smoke.csv `
-  --output-jsonl reports\v0.5_rfid_apbench_candidate_smoke.jsonl
+  --output-md reports\rfid_apbench_candidate_smoke.md `
+  --output-csv reports\rfid_apbench_candidate_smoke.csv `
+  --output-jsonl reports\rfid_apbench_candidate_smoke.jsonl
 ```
 
 Do not commit generated candidate RTL, simulator scratch, VCDs, or synthesis logs from evaluator work directories.

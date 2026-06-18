@@ -1,3 +1,0 @@
-prompt_profile,verilogeval_passed,rtllm2_passed,rtlopt_passed,total_passed,total_samples,recommendation,reason
-neutral_baseline,19,4,8,31,40,keep_default,Ties strict_rtl_only overall at 31/40, remains the historical control prompt, and is slightly better on RTL-OPT equivalence.
-strict_rtl_only,20,4,7,31,40,keep_challenger,Ties neutral_baseline overall and improves VerilogEval by one task, but does not improve RTLLM and is slightly weaker on RTL-OPT equivalence.

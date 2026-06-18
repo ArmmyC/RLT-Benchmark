@@ -36,3 +36,9 @@ The five v0.6 expansion task packages (`ap_006` through `ap_010`) also include
 ## Artifact Policy
 
 Do not commit benchmark run outputs, generated RTL, raw prompts, raw model responses, simulator logs, synthesis logs, VCD files, secrets, private data, training datasets, model weights, or LoRA/QLoRA/DoRA adapters.
+
+## Documentation
+
+- `docs/rfid_apbench.md`: benchmark overview and current public baseline summary.
+- `docs/release/rfid_apbench_reproducibility.md`: local reproduction guide.
+- `docs/release/rfid_apbench_report_hygiene.md`: report schema and artifact hygiene expectations.

@@ -1,6 +1,0 @@
-task,extraction_pass,raw_result_failure,sanitized_ppa_failure,compile_gate,synth_gate,equiv_gate,reference_area_present,generated_area_present
-add_sub#sample-0,true,synthesis_failure,compile_failure,false,false,false,true,false
-adder#sample-0,true,synthesis_failure,compile_failure,false,false,false,true,false
-adder_carry#sample-0,true,synthesis_failure,compile_failure,false,false,false,true,false
-adder_select#sample-0,true,synthesis_failure,compile_failure,false,false,false,true,false
-addr_calcu#sample-0,true,synthesis_failure,compile_failure,false,false,false,true,false

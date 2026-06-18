@@ -31,7 +31,7 @@ Examples:
 - `reports/v0.7_rfid_apbench_post_fix_expanded_10task_baseline.csv`
 - `reports/v0.7_rfid_apbench_post_fix_expanded_10task_baseline.jsonl`
 - `reports/v0.7_rfid_apbench_post_fix_failure_analysis.md`
-- `reports/v0.8_rfid_apbench_report_hygiene.md`
+- `docs/release/rfid_apbench_report_hygiene.md`
 
 ## Required Markdown Sections By Report Type
 

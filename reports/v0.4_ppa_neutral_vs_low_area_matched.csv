@@ -1,6 +1,0 @@
-task_id,neutral_status,low_area_status,neutral_equiv_pass,low_area_equiv_pass,neutral_reference_generic_cells,neutral_generated_generic_cells,neutral_optimization_score,low_area_reference_generic_cells,low_area_generated_generic_cells,low_area_optimization_score,paired_score_delta_low_minus_neutral,paired_outcome
-add_sub,valid,invalid,true,false,230,230,1.000000,230,169,,,unpaired
-adder,valid,valid,true,true,382,316,1.208861,382,316,1.208861,0.000000,match
-adder_carry,invalid,invalid,false,false,3,40,,3,40,,,unpaired
-adder_select,valid,valid,true,true,503,503,1.000000,503,503,1.000000,0.000000,match
-addr_calcu,invalid,invalid,false,false,286,161,,286,161,,,unpaired
