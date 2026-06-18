@@ -288,6 +288,7 @@ def test_generate_samples_propagates_empty_success_metadata(monkeypatch, tmp_pat
         top_p=1.0,
         max_tokens=4096,
         system_prompt="test system prompt",
+        extra_body={},
     )[(task.task_id, 1)]
 
     assert record.failure_category == "empty_response"
@@ -328,6 +329,7 @@ def test_generate_samples_propagates_structured_request_failure(monkeypatch, tmp
         top_p=1.0,
         max_tokens=4096,
         system_prompt="test system prompt",
+        extra_body={},
     )[(task.task_id, 1)]
 
     assert record.failure_category == "request_failed"
@@ -434,6 +436,17 @@ def test_completion_reliability_profile_is_resolved() -> None:
     assert "Markdown fences" in prompt
 
 
+def test_qwen_model_preset_disables_thinking() -> None:
+    extra_body = baseline.resolve_model_extra_body("qwen36-27b")
+
+    assert extra_body == {"chat_template_kwargs": {"enable_thinking": False}}
+
+
+def test_unknown_or_missing_model_preset_has_empty_extra_body(tmp_path: Path) -> None:
+    assert baseline.resolve_model_extra_body("unknown-model") == {}
+    assert baseline.resolve_model_extra_body("qwen36-27b", tmp_path / "missing.yaml") == {}
+
+
 def test_generate_samples_propagates_resolved_system_prompt(monkeypatch, tmp_path: Path) -> None:
     task = tasks()[0]
     config = baseline.EndpointConfig(
@@ -450,6 +463,7 @@ def test_generate_samples_propagates_resolved_system_prompt(monkeypatch, tmp_pat
 
     monkeypatch.setattr(baseline.OpenAICompatibleClient, "generate", generate)
     expected_prompt = baseline.resolve_system_prompt("completion_reliability")
+    expected_extra_body = {"chat_template_kwargs": {"enable_thinking": False}}
 
     baseline.generate_samples(
         tasks=[task],
@@ -461,9 +475,11 @@ def test_generate_samples_propagates_resolved_system_prompt(monkeypatch, tmp_pat
         top_p=1.0,
         max_tokens=4096,
         system_prompt=expected_prompt,
+        extra_body=expected_extra_body,
     )
 
     assert observed["system_prompt"] == expected_prompt
+    assert observed["extra_body"] == expected_extra_body
 
 
 def test_main_rejects_samples_per_task_other_than_three(monkeypatch) -> None:

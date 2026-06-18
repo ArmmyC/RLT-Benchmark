@@ -8,8 +8,10 @@ from collections import Counter, defaultdict
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any
 
 import httpx
+import yaml
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -44,6 +46,7 @@ from rtlbench.types import GenerationResult  # noqa: E402
 
 SAMPLES_PER_TASK = 3
 PROMPT_PROFILES_PATH = REPO_ROOT / "configs" / "prompt_profiles.yaml"
+MODEL_PRESETS_PATH = REPO_ROOT / "configs" / "models.yaml"
 OBSERVABILITY_FIELDS = [
     "request_outcome",
     "request_attempt_count",
@@ -200,6 +203,39 @@ def resolve_system_prompt(prompt_profile: str) -> str:
     return profiles[prompt_profile]
 
 
+def resolve_model_extra_body(
+    model: str,
+    models_path: Path = MODEL_PRESETS_PATH,
+) -> dict[str, Any]:
+    if not models_path.is_file():
+        return {}
+    data = yaml.safe_load(models_path.read_text(encoding="utf-8")) or {}
+    presets = data.get("models", data)
+    if not isinstance(presets, dict):
+        raise ValueError(f"Model presets in {models_path} must be a mapping")
+
+    selected = presets.get(model)
+    if selected is None:
+        matches = [
+            (str(name), entry)
+            for name, entry in presets.items()
+            if isinstance(entry, dict) and entry.get("name") == model
+        ]
+        if len(matches) > 1:
+            names = ", ".join(name for name, _ in sorted(matches))
+            raise ValueError(f"Ambiguous model preset for {model!r}: {names}")
+        if not matches:
+            return {}
+        selected = matches[0][1]
+
+    if not isinstance(selected, dict):
+        raise ValueError(f"Model preset {model!r} in {models_path} must be a mapping")
+    extra_body = selected.get("extra_body") or {}
+    if not isinstance(extra_body, dict):
+        raise ValueError(f"Model preset {model!r} extra_body must be a mapping")
+    return dict(extra_body)
+
+
 def tools_available(tools: ToolAvailability) -> bool:
     return tools.healthy_icarus and tools.healthy_yosys
 
@@ -342,6 +378,7 @@ def generate_samples(
     top_p: float,
     max_tokens: int,
     system_prompt: str,
+    extra_body: dict[str, Any],
 ) -> dict[tuple[str, int], GenerationRecord]:
     raw_dir = run_root / "raw_responses"
     extracted_dir = run_root / "extracted_rtl"
@@ -369,6 +406,7 @@ def generate_samples(
                         temperature=temperature,
                         top_p=top_p,
                         max_tokens=max_tokens,
+                        extra_body=extra_body or None,
                     )
                 except GenerationRequestError as exc:
                     records[(task.task_id, sample_id)] = GenerationRecord(
@@ -857,6 +895,7 @@ def main() -> int:
     tasks = load_tasks(benchmark_root, args.task_ids)
     system_prompt = resolve_system_prompt(args.prompt_profile)
     endpoint = load_endpoint_config()
+    extra_body = resolve_model_extra_body(endpoint.model)
     tools = detect_tools()
     run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
 
@@ -904,6 +943,7 @@ def main() -> int:
             top_p=args.top_p,
             max_tokens=args.max_tokens,
             system_prompt=system_prompt,
+            extra_body=extra_body,
         )
         evaluation_rows = evaluate_samples(
             benchmark_root=benchmark_root,

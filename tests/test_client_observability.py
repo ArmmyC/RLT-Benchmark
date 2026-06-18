@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from collections.abc import Callable
 
 import httpx
@@ -65,6 +66,35 @@ def test_nonempty_success_metadata() -> None:
     assert result.http_status_class == "2xx"
     assert result.response_parse_status == "parsed"
     assert result.usage == {"prompt_tokens": 10, "completion_tokens": 5, "total_tokens": 15}
+
+
+def test_extra_body_reaches_request_payload() -> None:
+    observed: dict[str, object] = {}
+
+    def capture(request: httpx.Request) -> httpx.Response:
+        observed.update(json.loads(request.content))
+        return httpx.Response(
+            200,
+            request=request,
+            json={"choices": [{"message": {"content": "module top; endmodule"}}]},
+        )
+
+    client = make_client(capture)
+    try:
+        client.generate(
+            model="qwen36-27b",
+            system_prompt="system",
+            user_prompt="prompt",
+            temperature=0.0,
+            top_p=1.0,
+            max_tokens=4096,
+            extra_body={"chat_template_kwargs": {"enable_thinking": False}},
+        )
+    finally:
+        client.close()
+
+    assert observed["chat_template_kwargs"] == {"enable_thinking": False}
+    assert observed["max_tokens"] == 4096
 
 
 def test_empty_success_metadata() -> None:
